@@ -121,7 +121,7 @@ int main(void)
 	bsp_InitADS1256();
 	
 	ADS1256_CfgADC((ADS1256_GAIN_E)config.ad_gain, ADS1256_15SPS);
-	ADS1256_StartScan(0);	
+	ADS1256_StartScan(1);	
 	
 	status.cmd_send_flag = 1;
 	
@@ -324,10 +324,10 @@ void record_file_write(void)
 		record.ADC_value2 = (record.ADC_value2 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
 		record.ADC_value3 = (record.ADC_value3 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
 	}else{
-		record.ADC_value0 = record_old.ADC_value0;
-		record.ADC_value1 = record_old.ADC_value1;
-		record.ADC_value2 = record_old.ADC_value2;
-		record.ADC_value3 = record_old.ADC_value3;
+		//record.ADC_value0 = record_old.ADC_value0;
+		//record.ADC_value1 = record_old.ADC_value1;
+		//record.ADC_value2 = record_old.ADC_value2;
+		//record.ADC_value3 = record_old.ADC_value3;
 	}
 	
 	if(record.sensor_count !=0 ){
@@ -335,16 +335,16 @@ void record_file_write(void)
 		record.temperature /= ((double)record.sensor_count);
 		record.pressure /= ((double)record.sensor_count);
 	}else{
-		record.humidity = record_old.humidity;
-		record.temperature = record_old.temperature;
-		record.pressure = record_old.pressure;
+		//record.humidity = record_old.humidity;
+		//record.temperature = record_old.temperature;
+		//record.pressure = record_old.pressure;
 	}
 	if(record.wind_count != 0) {
 		record.wind_speed /= ((double)record.wind_count);
 		record.wind_direction /= ((double)record.wind_count);
 	}else{
-		record.wind_speed = record_old.wind_speed;
-		record.wind_direction = record_old.wind_direction;
+		//record.wind_speed = record_old.wind_speed;
+		//record.wind_direction = record_old.wind_direction;
 	}
 	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%5d,%8.6f,%8.6f,%8.6f,%8.6f,%6.2f,%6.2f,%7.2f,%6.2f,%7.2f",
 											calendar.w_year,calendar.w_month,calendar.w_date,calendar.hour,calendar.min,calendar.sec,

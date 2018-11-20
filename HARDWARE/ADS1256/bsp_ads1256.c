@@ -237,7 +237,7 @@ void ADS1256_CfgADC(ADS1256_GAIN_E _gain, ADS1256_DRATE_E _drate)
 		buf[0] = (0 << 3) | (1 << 2) | (1 << 1);
 		//ADS1256_WriteReg(REG_STATUS, (0 << 3) | (1 << 2) | (1 << 1));
 
-		buf[1] = 0x08;	/* 高四位0表示AINP接 AIN0,  低四位8表示 AINN 固定接 AINCOM */
+		buf[1] = 0x01;	/* 高四位0表示AINP接 AIN0,  低四位8表示 AINN 固定接 AINCOM */
 
 		/*	ADCON: A/D Control Register (Address 02h)
 			Bit 7 Reserved, always 0 (Read Only)
