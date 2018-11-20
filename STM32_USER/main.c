@@ -12,6 +12,7 @@
 #include "beep.h"
 #include "rtc.h"
 #include "timer.h"
+#include "key.h"
 //#include "adc.h"
 #include "bme280.h"
 #include "bsp_ads1256.h"
@@ -66,6 +67,7 @@ int main(void)
 	TIM_SetInterval(1,2000);//1ms
 	LED_Init();
 	Beep_Init();
+	Key_Init();
 	
 	USART1_Init(115200); //串口1初始化
 	USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
@@ -83,23 +85,33 @@ int main(void)
 	config.second = 30;*/
 	config.freq = 1;
 	config.rtc_flag = 0;
+	config.ad_gain = ADS1256_GAIN_1;
 	do{
 		if(usart1_recv_frame_flag) {
-				sscanf((char*)usart1_recv, "$%d,%f,%f,%d,%d,%d,%d:%d:%d,%d",&config.baud,&config.cal_A,&config.cal_B,
-					&config.year,&config.month,&config.date,&config.hour,&config.minute,&config.second,&config.freq);
-				if(config.year ==0){
-					config.rtc_flag = 0;
+				sscanf((char*)usart1_recv, "$%d,%f,%f,%d,%d,%d,%d:%d:%d,%d,%d",&config.baud,&config.cal_A,&config.cal_B,
+					&config.year,&config.month,&config.date,&config.hour,&config.minute,&config.second,&config.ad_gain,&config.freq);
+				if(config.year !=0){
+					config.rtc_flag = 1;
+				}else{
+					config.rtc_flag = 1;
 				}
 				usart1_recv_frame_flag = 0;
 				status.sys_config_flag =1;
 				USART_SendString(USART1,usart1_recv);
 				break;
 		} else {
+			if(KEY0_HARD_STA | KEY1_HARD_STA | KEY2_HARD_STA | KEY3_HARD_STA){
 				status.sys_config_flag =1;
+				break;
+			}
 		}
 	}while(1);
 	
 	LED_OFF(LED1);
+	/*while(1){
+		delay_ms(500);
+		LED_TOGGLE(LED1);
+	}*/
 	while(RTC_Init(config.rtc_flag,config.year,config.month,config.date,config.hour,config.minute,config.second)) {
 		delay_ms(100);
 	}
@@ -108,7 +120,7 @@ int main(void)
 	
 	bsp_InitADS1256();
 	
-	ADS1256_CfgADC(ADS1256_GAIN_1, ADS1256_15SPS);
+	ADS1256_CfgADC((ADS1256_GAIN_E)config.ad_gain, ADS1256_15SPS);
 	ADS1256_StartScan(0);	
 	
 	status.cmd_send_flag = 1;
@@ -215,14 +227,14 @@ int main(void)
     } 
 		if (0 == usart2_recv_flag){
 			if(status.cmd_send_flag){
-				if((tick_count - status.last_cmd_tick) > 500){
+				if((tick_count - status.last_cmd_tick) > 400){
 					USART_SendBuf(USART2,send_cmd,12);
           status.last_cmd_tick = tick_count;
         }
 			} 
     }
 		//记录温湿度计信息
-		if((tick_count - status.last_sensor) >500) {
+		if((tick_count - status.last_sensor) >400) {
 			status.last_sensor = tick_count;
 			if(BME280_OK == bme280_get_sensor_data(BME280_ALL, &comp_data, &dev)){
 				record.humidity += comp_data.humidity;
@@ -232,7 +244,7 @@ int main(void)
 			}
 		}
 		//记录AD转换信息
-		if((tick_count - status.last_adc) > 500) {
+		if((tick_count - status.last_adc) > 400) {
 			status.last_adc = tick_count;
 			record.ADC_value0 += (double)ADS1256_GetAdc(0);
 			record.ADC_value1 += (double)ADS1256_GetAdc(1);
@@ -307,33 +319,33 @@ void record_file_write(void)
 		record.ADC_value2 = (record.ADC_value2/(double)record.ADC_count)*config.cal_A+config.cal_B;
 		record.ADC_value3 = (record.ADC_value3/(double)record.ADC_count)*config.cal_A+config.cal_B;
 		
-		record.ADC_value0 = (record.ADC_value0 * 2.5000000) / 4194303.0;
-		record.ADC_value1 = (record.ADC_value1 * 2.5000000) / 4194303.0;
-		record.ADC_value2 = (record.ADC_value2 * 2.5000000) / 4194303.0;
-		record.ADC_value3 = (record.ADC_value3 * 2.5000000) / 4194303.0;
-	}/*else{
+		record.ADC_value0 = (record.ADC_value0 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
+		record.ADC_value1 = (record.ADC_value1 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
+		record.ADC_value2 = (record.ADC_value2 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
+		record.ADC_value3 = (record.ADC_value3 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
+	}else{
 		record.ADC_value0 = record_old.ADC_value0;
 		record.ADC_value1 = record_old.ADC_value1;
 		record.ADC_value2 = record_old.ADC_value2;
 		record.ADC_value3 = record_old.ADC_value3;
-	}*/
+	}
 	
 	if(record.sensor_count !=0 ){
 		record.humidity /= ((double)record.sensor_count);
 		record.temperature /= ((double)record.sensor_count);
 		record.pressure /= ((double)record.sensor_count);
-	}/*else{
+	}else{
 		record.humidity = record_old.humidity;
 		record.temperature = record_old.temperature;
 		record.pressure = record_old.pressure;
-	}*/
+	}
 	if(record.wind_count != 0) {
 		record.wind_speed /= ((double)record.wind_count);
 		record.wind_direction /= ((double)record.wind_count);
-	}/*else{
+	}else{
 		record.wind_speed = record_old.wind_speed;
 		record.wind_direction = record_old.wind_direction;
-	}*/
+	}
 	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%5d,%8.6f,%8.6f,%8.6f,%8.6f,%6.2f,%6.2f,%7.2f,%6.2f,%7.2f",
 											calendar.w_year,calendar.w_month,calendar.w_date,calendar.hour,calendar.min,calendar.sec,
 											cur.line_num,record.ADC_value0,record.ADC_value1,record.ADC_value2,record.ADC_value3,
@@ -358,6 +370,15 @@ void record_file_write(void)
 			f_sync(&cur.fsrc);
 		}*/
 		//memcpy(&record_old, &record, sizeof(struct record_info));
+		record_old.ADC_value0 = record.ADC_value0;
+		record_old.ADC_value1 = record.ADC_value1;
+		record_old.ADC_value2 = record.ADC_value2;
+		record_old.ADC_value3 = record.ADC_value3;
+		record_old.humidity = record.humidity;
+		record_old.temperature = record.temperature;
+		record_old.pressure = record.pressure;
+		record_old.wind_speed = record.wind_speed;
+		record_old.wind_direction = record.wind_direction;
 		memset(&record, 0, sizeof(record));
 }
 

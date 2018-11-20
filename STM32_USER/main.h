@@ -50,6 +50,7 @@ struct sys_config{
 	uint32_t minute;
 	uint32_t second;
 	uint32_t freq;
+	uint32_t ad_gain;
 	uint8_t rtc_flag;
 };
 
