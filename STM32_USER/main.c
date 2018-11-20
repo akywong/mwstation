@@ -68,7 +68,8 @@ int main(void)
 	USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 	
 	//while(status.sys_config_flag == 0){
-		do{
+	LED_ON(LED1);
+	do{
 			if(usart1_recv_frame_flag) {
 				sscanf((char*)usart1_recv, "$%d,%f,%f,%d,%d,%d,%d:%d:%d,%d",&config.baud,&config.cal_A,&config.cal_B,
 					&config.year,&config.month,&config.date,&config.hour,&config.minute,&config.second,&config.freq);
@@ -78,7 +79,7 @@ int main(void)
 				break;
 		}
 	}while(1);
-	
+	LED_OFF(LED1);
 	while(RTC_Init(config.year,config.month,config.date,config.hour,config.minute,config.second)) {
 		delay_ms(100);
 	}
@@ -148,7 +149,7 @@ int main(void)
 	USART2_Init(config.baud); //串口2初始化
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
 	if(status.cmd_send_flag ) {
-				USART_SendBuf(USART1,send_cmd,12);
+				USART_SendBuf(USART2,send_cmd,12);
         status.last_cmd_tick = tick_count;
     }
 	
@@ -220,10 +221,11 @@ int main(void)
 		
 		//写文件
 		if((tick_count - status.last_record_tick) > (500*config.freq)){
+			LED_ON(LED0);
 			status.last_record_tick = tick_count;
 			record_file_write();
+			LED_OFF(LED0);
 		}
-		LED_TOGGLE(LED0);
 	}
 }
 //检查风速计信息格式
@@ -270,33 +272,40 @@ void record_file_write(void)
 	UINT count;
 	u8 ret;
 	int len;
-	char prefix[70];
+	char prefix[128];
 	/*if(tick_count-status.last_wind_info>1500) {
 		valid_flag |= WIND_INFO_UNVALID;
 	}
 	if(BME280_OK != bme280_get_sensor_data(BME280_ALL, &comp_data, &dev)){
 		valid_flag |= BME_SENSOR_UNVALID;
 	}*/
-	record.ADC_value0 = (record.ADC_value0/(double)record.ADC_count)*config.cal_A+config.cal_B;
-	record.ADC_value1 = (record.ADC_value1/(double)record.ADC_count)*config.cal_A+config.cal_B;
-	record.ADC_value2 = (record.ADC_value2/(double)record.ADC_count)*config.cal_A+config.cal_B;
-	record.ADC_value3 = (record.ADC_value3/(double)record.ADC_count)*config.cal_A+config.cal_B;
+	if(record.ADC_count !=0 ){
+		record.ADC_value0 = (record.ADC_value0/(double)record.ADC_count)*config.cal_A+config.cal_B;
+		record.ADC_value1 = (record.ADC_value1/(double)record.ADC_count)*config.cal_A+config.cal_B;
+		record.ADC_value2 = (record.ADC_value2/(double)record.ADC_count)*config.cal_A+config.cal_B;
+		record.ADC_value3 = (record.ADC_value3/(double)record.ADC_count)*config.cal_A+config.cal_B;
+		
+		record.ADC_value0 = (record.ADC_value0 * 2.5000000) / 4194303.0;
+		record.ADC_value1 = (record.ADC_value1 * 2.5000000) / 4194303.0;
+		record.ADC_value2 = (record.ADC_value2 * 2.5000000) / 4194303.0;
+		record.ADC_value3 = (record.ADC_value3 * 2.5000000) / 4194303.0;
+	}
 	
-	record.ADC_value0 = (record.ADC_value0 * 2500000.0) / 4194303.0;
-	record.ADC_value1 = (record.ADC_value1 * 2500000.0) / 4194303.0;
-	record.ADC_value2 = (record.ADC_value2 * 2500000.0) / 4194303.0;
-	record.ADC_value3 = (record.ADC_value3 * 2500000.0) / 4194303.0;
-	
-	record.humidity /= ((double)record.sensor_count);
-	record.temperature /= ((double)record.sensor_count);
-	record.pressure /= ((double)record.sensor_count);
-	record.wind_speed /= ((double)record.wind_count);
-	record.wind_direction /= ((double)record.wind_direction);
-	len = sprintf(prefix,"%4d-%02d-%02d %02d:%02d:%02d,%5.1f,%5.1f,%6.2f,%8.2f,%5.2f,%f,%f,%f,%f",
+	if(record.sensor_count !=0 ){
+		record.humidity /= ((double)record.sensor_count);
+		record.temperature /= ((double)record.sensor_count);
+		record.pressure /= ((double)record.sensor_count);
+	}
+	if(record.wind_count != 0) {
+		record.wind_speed /= ((double)record.wind_count);
+		record.wind_direction /= ((double)record.wind_count);
+	}
+	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%5d,%8.6f,%8.6f,%8.6f,%8.6f,%6.2f,%6.2f,%7.2f,%6.2f,%7.2f",
 											calendar.w_year,calendar.w_month,calendar.w_date,calendar.hour,calendar.min,calendar.sec,
+											cur.line_num,record.ADC_value0,record.ADC_value1,record.ADC_value2,record.ADC_value3,
 											record.wind_speed,record.wind_direction,
-											record.temperature, record.humidity, record.pressure,
-											record.ADC_value0,record.ADC_value1,record.ADC_value2,record.ADC_value3);
+											record.temperature, record.humidity, record.pressure/100.0
+											);
 	
 	prefix[len] = 0x0d;
 	prefix[len+1] = 0x0a;
@@ -309,11 +318,11 @@ void record_file_write(void)
 			return;
 		} else {
 			cur.line_num++;
-			//f_sync(&cur.fsrc);
-		}
-		if((cur.line_num * config.freq) > 10) {
 			f_sync(&cur.fsrc);
 		}
+		/*if((cur.line_num * config.freq) > 10) {
+			f_sync(&cur.fsrc);
+		}*/
 		memset(&record, 0, sizeof(record));
 }
 
@@ -346,7 +355,7 @@ void record_head(void)
 		f_close(&cur.fsrc);
 		return;
 	} else {
-		cur.line_num++;
+		//cur.line_num++;
 		f_sync(&cur.fsrc);
 	}
 }

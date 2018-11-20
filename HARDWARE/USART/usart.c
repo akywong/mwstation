@@ -151,6 +151,7 @@ void USART1_IRQHandler(void)                	//串口1中断服务程序
 			Clear=USART1->SR;
 			Clear=USART1->DR;
       usart1_recv_flag = 0;
+			usart1_recv_cnt=0;
 	}
 }
 

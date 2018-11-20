@@ -737,7 +737,7 @@ void ADS1256_StartScan(uint8_t _ucScanMode)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 
 	/* Connect EXTI3 Line to PE3 pin */
-	GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource3);
+	GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource3);
 
 	/* Configure EXTI3 line */
 	EXTI_InitStructure.EXTI_Line = EXTI_Line3;
