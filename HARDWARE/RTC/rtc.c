@@ -32,13 +32,13 @@ static void RTC_NVIC_Config(void)
 //返回0:正常
 //其他:错误代码
 
-u8 RTC_Init(u16 syear,u8 smon,u8 sday,u8 hour,u8 min,u8 sec)
+u8 RTC_Init(u8 flag, u16 syear,u8 smon,u8 sday,u8 hour,u8 min,u8 sec)
 {
 	//检查是不是第一次配置时钟
 	u8 temp=0;
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);	//使能PWR和BKP外设时钟   
 	PWR_BackupAccessCmd(ENABLE);	//使能后备寄存器访问  
-	if (1){//BKP_ReadBackupRegister(BKP_DR1) != 0x5050){		//从指定的后备寄存器中读出数据:读出了与写入的指定数据不相乎
+	if ((flag==1) || (BKP_ReadBackupRegister(BKP_DR1) != 0x5050)){		//从指定的后备寄存器中读出数据:读出了与写入的指定数据不相乎
 		BKP_DeInit();	//复位备份区域 	
 		RCC_LSEConfig(RCC_LSE_ON);	//设置外部低速晶振(LSE),使用外设低速晶振
 		while (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET&&temp<250){	//检查指定的RCC标志位设置与否,等待低速晶振就绪

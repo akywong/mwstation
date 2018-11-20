@@ -48,7 +48,9 @@ struct record_info{
 	double ADC_value2;
 	double ADC_value3;
 	uint32_t ADC_count;
-}record;
+};
+struct record_info record;
+struct record_info record_old;
 
 int main(void)
 {
@@ -58,6 +60,7 @@ int main(void)
 	memset(&wind, 0,sizeof(struct wind_info));
 	memset(ADC_value,0,sizeof(double)*ADC_CHAN_NUM);
 	memset(&record, 0, sizeof(record));
+	memset(&record_old, 0, sizeof(record_old));
 	delay_init();	    //延时函数初始化
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置中断优先级分组为组2：2位抢占优先级，2位响应优先级
 	TIM_SetInterval(1,2000);//1ms
@@ -69,18 +72,35 @@ int main(void)
 	
 	//while(status.sys_config_flag == 0){
 	LED_ON(LED1);
+	config.baud = 9600;
+	config.cal_A = 1.0;
+	config.cal_B = 0;
+	/*config.year = 0;
+	config.month = 11;
+	config.date = 7;
+	config.hour = 14;
+	config.minute = 30;
+	config.second = 30;*/
+	config.freq = 1;
+	config.rtc_flag = 0;
 	do{
-			if(usart1_recv_frame_flag) {
+		if(usart1_recv_frame_flag) {
 				sscanf((char*)usart1_recv, "$%d,%f,%f,%d,%d,%d,%d:%d:%d,%d",&config.baud,&config.cal_A,&config.cal_B,
 					&config.year,&config.month,&config.date,&config.hour,&config.minute,&config.second,&config.freq);
+				if(config.year ==0){
+					config.rtc_flag = 0;
+				}
 				usart1_recv_frame_flag = 0;
 				status.sys_config_flag =1;
 				USART_SendString(USART1,usart1_recv);
 				break;
+		} else {
+				status.sys_config_flag =1;
 		}
 	}while(1);
+	
 	LED_OFF(LED1);
-	while(RTC_Init(config.year,config.month,config.date,config.hour,config.minute,config.second)) {
+	while(RTC_Init(config.rtc_flag,config.year,config.month,config.date,config.hour,config.minute,config.second)) {
 		delay_ms(100);
 	}
 	
@@ -143,7 +163,9 @@ int main(void)
 	cur.file_flag = 1;
 	
 	if(cur.fsrc.fsize == 0){
+		LED_ON(LED0);
 		record_head();
+		LED_OFF(LED0);
 	}
 	
 	USART2_Init(config.baud); //串口2初始化
@@ -152,7 +174,7 @@ int main(void)
 				USART_SendBuf(USART2,send_cmd,12);
         status.last_cmd_tick = tick_count;
     }
-	
+	LED_ON(LED1);
 	while(1)
 	{
 		if(new_file_flag == 1) {
@@ -210,7 +232,7 @@ int main(void)
 			}
 		}
 		//记录AD转换信息
-		if((tick_count - status.last_adc) > 5000) {
+		if((tick_count - status.last_adc) > 500) {
 			status.last_adc = tick_count;
 			record.ADC_value0 += (double)ADS1256_GetAdc(0);
 			record.ADC_value1 += (double)ADS1256_GetAdc(1);
@@ -289,17 +311,29 @@ void record_file_write(void)
 		record.ADC_value1 = (record.ADC_value1 * 2.5000000) / 4194303.0;
 		record.ADC_value2 = (record.ADC_value2 * 2.5000000) / 4194303.0;
 		record.ADC_value3 = (record.ADC_value3 * 2.5000000) / 4194303.0;
-	}
+	}/*else{
+		record.ADC_value0 = record_old.ADC_value0;
+		record.ADC_value1 = record_old.ADC_value1;
+		record.ADC_value2 = record_old.ADC_value2;
+		record.ADC_value3 = record_old.ADC_value3;
+	}*/
 	
 	if(record.sensor_count !=0 ){
 		record.humidity /= ((double)record.sensor_count);
 		record.temperature /= ((double)record.sensor_count);
 		record.pressure /= ((double)record.sensor_count);
-	}
+	}/*else{
+		record.humidity = record_old.humidity;
+		record.temperature = record_old.temperature;
+		record.pressure = record_old.pressure;
+	}*/
 	if(record.wind_count != 0) {
 		record.wind_speed /= ((double)record.wind_count);
 		record.wind_direction /= ((double)record.wind_count);
-	}
+	}/*else{
+		record.wind_speed = record_old.wind_speed;
+		record.wind_direction = record_old.wind_direction;
+	}*/
 	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%5d,%8.6f,%8.6f,%8.6f,%8.6f,%6.2f,%6.2f,%7.2f,%6.2f,%7.2f",
 											calendar.w_year,calendar.w_month,calendar.w_date,calendar.hour,calendar.min,calendar.sec,
 											cur.line_num,record.ADC_value0,record.ADC_value1,record.ADC_value2,record.ADC_value3,
@@ -310,7 +344,7 @@ void record_file_write(void)
 	prefix[len] = 0x0d;
 	prefix[len+1] = 0x0a;
 	ret = f_write(&cur.fsrc,prefix,len+2,&count);
-		LED_TOGGLE(LED1);
+		//LED_TOGGLE(LED1);
 		if(FR_OK != ret) {
 			cur.file_flag = 0;
 			cur.line_num = 0;
@@ -323,6 +357,7 @@ void record_file_write(void)
 		/*if((cur.line_num * config.freq) > 10) {
 			f_sync(&cur.fsrc);
 		}*/
+		//memcpy(&record_old, &record, sizeof(struct record_info));
 		memset(&record, 0, sizeof(record));
 }
 

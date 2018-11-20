@@ -50,6 +50,7 @@ struct sys_config{
 	uint32_t minute;
 	uint32_t second;
 	uint32_t freq;
+	uint8_t rtc_flag;
 };
 
 extern uint8_t new_file_flag;
