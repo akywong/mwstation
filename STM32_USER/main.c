@@ -13,6 +13,7 @@
 #include "rtc.h"
 #include "timer.h"
 #include "key.h"
+#include "24cxx.h"
 //#include "adc.h"
 #include "bme280.h"
 #include "bsp_ads1256.h"
@@ -68,24 +69,30 @@ int main(void)
 	LED_Init();
 	Beep_Init();
 	Key_Init();
+	AT24CXX_Init();
 	
 	USART1_Init(115200); //´®¿Ú1³õÊ¼»¯
 	USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 	
 	//while(status.sys_config_flag == 0){
 	LED_ON(LED1);
-	config.baud = 9600;
-	config.cal_A = 1.0;
-	config.cal_B = 0;
-	/*config.year = 0;
-	config.month = 11;
-	config.date = 7;
-	config.hour = 14;
-	config.minute = 30;
-	config.second = 30;*/
-	config.freq = 1;
+	AT24CXX_Read(0,(u8*)&config,sizeof(config));
+	if(config.valid_flag != 0xAA5555AA){
+		config.valid_flag = 0xAA5555AA;
+		config.baud = 9600;
+		config.cal_A = 1.0;
+		config.cal_B = 0;
+		/*config.year = 0;
+		config.month = 11;
+		config.date = 7;
+		config.hour = 14;
+		config.minute = 30;
+		config.second = 30;*/
+		config.freq = 1;
+		config.rtc_flag = 0;
+		config.ad_gain = ADS1256_GAIN_1;
+	}
 	config.rtc_flag = 0;
-	config.ad_gain = ADS1256_GAIN_1;
 	do{
 		if(usart1_recv_frame_flag) {
 				sscanf((char*)usart1_recv, "$%d,%f,%f,%d,%d,%d,%d:%d:%d,%d,%d",&config.baud,&config.cal_A,&config.cal_B,
@@ -106,7 +113,7 @@ int main(void)
 			}
 		}
 	}while(1);
-	
+	AT24CXX_Write(0,(u8*)&config,sizeof(config));
 	LED_OFF(LED1);
 	/*while(1){
 		delay_ms(500);
@@ -324,10 +331,10 @@ void record_file_write(void)
 		record.ADC_value2 = (record.ADC_value2 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
 		record.ADC_value3 = (record.ADC_value3 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
 	}else{
-		//record.ADC_value0 = record_old.ADC_value0;
-		//record.ADC_value1 = record_old.ADC_value1;
-		//record.ADC_value2 = record_old.ADC_value2;
-		//record.ADC_value3 = record_old.ADC_value3;
+		/*record.ADC_value0 = record_old.ADC_value0;
+		record.ADC_value1 = record_old.ADC_value1;
+		record.ADC_value2 = record_old.ADC_value2;
+		record.ADC_value3 = record_old.ADC_value3;*/
 	}
 	
 	if(record.sensor_count !=0 ){
@@ -335,16 +342,16 @@ void record_file_write(void)
 		record.temperature /= ((double)record.sensor_count);
 		record.pressure /= ((double)record.sensor_count);
 	}else{
-		//record.humidity = record_old.humidity;
-		//record.temperature = record_old.temperature;
-		//record.pressure = record_old.pressure;
+		/*record.humidity = record_old.humidity;
+		record.temperature = record_old.temperature;
+		record.pressure = record_old.pressure;*/
 	}
 	if(record.wind_count != 0) {
 		record.wind_speed /= ((double)record.wind_count);
 		record.wind_direction /= ((double)record.wind_count);
 	}else{
-		//record.wind_speed = record_old.wind_speed;
-		//record.wind_direction = record_old.wind_direction;
+		/*record.wind_speed = record_old.wind_speed;
+		record.wind_direction = record_old.wind_direction;*/
 	}
 	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%5d,%8.6f,%8.6f,%8.6f,%8.6f,%6.2f,%6.2f,%7.2f,%6.2f,%7.2f",
 											calendar.w_year,calendar.w_month,calendar.w_date,calendar.hour,calendar.min,calendar.sec,

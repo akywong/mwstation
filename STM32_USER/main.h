@@ -40,6 +40,7 @@ struct wind_info{
 };
 
 struct sys_config{
+	uint32_t valid_flag;
 	uint32_t baud;
 	float cal_A;
 	float cal_B;
