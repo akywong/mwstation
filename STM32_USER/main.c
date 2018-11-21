@@ -76,6 +76,14 @@ int main(void)
 	
 	//while(status.sys_config_flag == 0){
 	LED_ON(LED1);
+	while(AT24CXX_Check())//????24c02
+	{
+		delay_ms(500);
+		//delay_ms(500);
+		LED_TOGGLE(LED1);
+		printf("EEPROM Check Failed!\r\n");
+	}
+	LED_ON(LED1);
 	AT24CXX_Read(0,(u8*)&config,sizeof(config));
 	if(config.valid_flag != 0xAA5555AA){
 		config.valid_flag = 0xAA5555AA;
