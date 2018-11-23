@@ -54,6 +54,21 @@ struct record_info{
 struct record_info record;
 struct record_info record_old;
 
+#define CONFIG_GPIO     GPIOA
+#define CONFIG_PIN			GPIO_Pin_1
+#define CONFIG_IO_RCC_CLK RCC_APB2Periph_GPIOA
+#define CONFIG_IO_GET_IN()  ((CONFIG_GPIO->IDR & CONFIG_PIN)?(1):(0))
+void config_gpio_init(void)
+{
+	GPIO_InitTypeDef  GPIO_InitStructure;
+	
+	RCC_APB2PeriphClockCmd(CONFIG_IO_RCC_CLK, ENABLE);
+	
+	GPIO_InitStructure.GPIO_Pin = CONFIG_PIN;	 	     //端口配置, 推挽输出
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD; 		     //上拉输入
+	GPIO_Init(CONFIG_GPIO, &GPIO_InitStructure);
+}
+
 int main(void)
 {
 	u8 t=0,r=0;
@@ -68,7 +83,8 @@ int main(void)
 	TIM_SetInterval(1,2000);//1ms
 	LED_Init();
 	Beep_Init();
-	Key_Init();
+	//Key_Init();
+	config_gpio_init();
 	AT24CXX_Init();
 	
 	USART1_Init(115200); //串口1初始化
@@ -76,7 +92,7 @@ int main(void)
 	
 	//while(status.sys_config_flag == 0){
 	LED_ON(LED1);
-	while(AT24CXX_Check())//????24c02
+	while(AT24CXX_Check())
 	{
 		delay_ms(500);
 		//delay_ms(500);
@@ -114,13 +130,9 @@ int main(void)
 				status.sys_config_flag =1;
 				USART_SendString(USART1,usart1_recv);
 				break;
-		} else {
-			if(KEY0_HARD_STA | KEY1_HARD_STA | KEY2_HARD_STA | KEY3_HARD_STA){
-				status.sys_config_flag =1;
-				break;
-			}
 		}
-	}while(1);
+		delay_ms(50);
+	}while(CONFIG_IO_GET_IN());
 	AT24CXX_Write(0,(u8*)&config,sizeof(config));
 	LED_OFF(LED1);
 	/*while(1){
@@ -321,7 +333,7 @@ void record_file_write(void)
 	UINT count;
 	u8 ret;
 	int len;
-	char prefix[128];
+	char prefix[128]={0};
 	/*if(tick_count-status.last_wind_info>1500) {
 		valid_flag |= WIND_INFO_UNVALID;
 	}
@@ -385,6 +397,7 @@ void record_file_write(void)
 			f_sync(&cur.fsrc);
 		}*/
 		//memcpy(&record_old, &record, sizeof(struct record_info));
+		//USART_SendString(USART1,(unsigned char *)prefix);
 		record_old.ADC_value0 = record.ADC_value0;
 		record_old.ADC_value1 = record.ADC_value1;
 		record_old.ADC_value2 = record.ADC_value2;
