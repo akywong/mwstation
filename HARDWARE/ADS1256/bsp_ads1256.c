@@ -794,11 +794,15 @@ int32_t ADS1256_GetAdc(uint8_t _ch)
 {
 	int32_t iTemp;
 
-	if (_ch > 7)
+	if (_ch > 8)
 	{
 		return 0;
 	}
 
+	if(_ch == 8){
+		iTemp = g_tADS1256.test_flag;
+		return iTemp;
+	}
 	//__set_PRIMASK(1);	/* 禁止中断 */
 
 	iTemp = g_tADS1256.AdcNow[_ch];
@@ -818,6 +822,11 @@ int32_t ADS1256_GetAdc(uint8_t _ch)
 */
 void ADS1256_ISR(void)
 {
+	if(s_tabDataRate[ADS1256_5SPS] != ADS1256_ReadReg(REG_DRATE)) {
+		g_tADS1256.test_flag = 1;
+	} else {
+		g_tADS1256.test_flag = 0;
+	}
 	if (g_tADS1256.ScanMode == 0)	/* 0 表示单端8路扫描，1表示差分4路扫描 */
 	{
 		/* 读取采集结构，保存在全局变量 */

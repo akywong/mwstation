@@ -122,7 +122,7 @@ int main(void)
 				sscanf((char*)usart1_recv, "$%d,%f,%f,%d,%d,%d,%d:%d:%d,%d,%d",&config.baud,&config.cal_A,&config.cal_B,
 					&config.year,&config.month,&config.date,&config.hour,&config.minute,&config.second,&config.ad_gain,&config.freq);
 				if(config.year !=0){
-					config.rtc_flag = 1;
+					config.rtc_flag = 0;
 				}else{
 					config.rtc_flag = 1;
 				}
@@ -147,7 +147,7 @@ int main(void)
 	
 	bsp_InitADS1256();
 	
-	ADS1256_CfgADC((ADS1256_GAIN_E)config.ad_gain, ADS1256_15SPS);
+	ADS1256_CfgADC((ADS1256_GAIN_E)config.ad_gain, ADS1256_5SPS);
 	ADS1256_StartScan(1);	
 	
 	status.cmd_send_flag = 1;
@@ -213,7 +213,7 @@ int main(void)
 				USART_SendBuf(USART2,send_cmd,12);
         status.last_cmd_tick = tick_count;
     }
-	LED_ON(LED1);
+	//LED_ON(LED1);
 	while(1)
 	{
 		if(new_file_flag == 1) {
@@ -236,6 +236,7 @@ int main(void)
 			if(cur.fsrc.fsize == 0){
 				record_head();
 			}
+			LED_ON(LED1);
 		}
 		//记录风速计信息
 		if(usart2_recv_frame_flag) {
@@ -278,10 +279,12 @@ int main(void)
 			record.ADC_value2 += (double)ADS1256_GetAdc(2);
 			record.ADC_value3 += (double)ADS1256_GetAdc(3);
 			record.ADC_count++;
+			if(ADS1256_GetAdc(8)) {
+				USART_SendString(USART1," ADS1256 RESET\r\n");
+			}
 		}
-		
 		//写文件
-		if((tick_count - status.last_record_tick) > (500*config.freq)){
+		if((tick_count - status.last_record_tick) > (499*config.freq)){
 			LED_ON(LED0);
 			status.last_record_tick = tick_count;
 			record_file_write();
@@ -387,7 +390,7 @@ void record_file_write(void)
 		if(FR_OK != ret) {
 			cur.file_flag = 0;
 			cur.line_num = 0;
-			f_close(&cur.fsrc);
+			f_close(&cur.fsrc);//FR_OK
 			return;
 		} else {
 			cur.line_num++;
@@ -397,7 +400,7 @@ void record_file_write(void)
 			f_sync(&cur.fsrc);
 		}*/
 		//memcpy(&record_old, &record, sizeof(struct record_info));
-		//USART_SendString(USART1,(unsigned char *)prefix);
+		USART_SendString(USART1,(unsigned char *)prefix);
 		record_old.ADC_value0 = record.ADC_value0;
 		record_old.ADC_value1 = record.ADC_value1;
 		record_old.ADC_value2 = record.ADC_value2;
@@ -437,6 +440,7 @@ void record_head(void)
 		cur.file_flag = 0;
 		cur.line_num = 0;
 		f_close(&cur.fsrc);
+		LED_OFF(LED1);
 		return;
 	} else {
 		//cur.line_num++;

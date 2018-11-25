@@ -125,6 +125,7 @@ typedef struct
 	int32_t AdcNow[8];			/* 8路ADC采集结果（实时）有符号数 */
 	uint8_t Channel;			/* 当前通道 */
 	uint8_t ScanMode;			/* 扫描模式，0表示单端8路， 1表示差分4路 */
+	uint8_t test_flag;
 }ADS1256_VAR_T;
 
 void bsp_InitADS1256(void);
@@ -134,6 +135,7 @@ uint8_t ADS1256_ReadChipID(void);
 void ADS1256_StartScan(uint8_t _ucScanMode);
 void ADS1256_StopScan(void);
 int32_t ADS1256_GetAdc(uint8_t _ch);
+
 
 extern ADS1256_VAR_T g_tADS1256;
 
