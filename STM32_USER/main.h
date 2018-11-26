@@ -29,6 +29,7 @@ struct sys_status{
     uint8_t cmd_send_flag;
     uint8_t lora_send_flag;
 		uint8_t stop_feed_flag;
+		uint8_t rtc_flag;
 };
 
 struct wind_info{
@@ -40,7 +41,7 @@ struct wind_info{
 };
 
 struct sys_config{
-	uint32_t valid_flag;
+	uint32_t head;
 	uint32_t baud;
 	float cal_A;
 	float cal_B;
@@ -52,7 +53,8 @@ struct sys_config{
 	uint32_t second;
 	uint32_t freq;
 	uint32_t ad_gain;
-	uint8_t rtc_flag;
+	uint32_t rsv[16];
+	uint32_t tail;
 };
 
 extern uint8_t new_file_flag;

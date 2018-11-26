@@ -33,6 +33,8 @@ struct wind_info  wind;
 struct fs_status cur;
 struct bme280_dev dev;
 struct bme280_data comp_data;
+
+//struct sys_config test_config;
 char *check_wind_info(char *str, int len);
 void record_file_write(void);
 void record_head(void);
@@ -90,7 +92,6 @@ int main(void)
 	USART1_Init(115200); //串口1初始化
 	USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 	
-	//while(status.sys_config_flag == 0){
 	LED_ON(LED1);
 	while(AT24CXX_Check())
 	{
@@ -99,47 +100,53 @@ int main(void)
 		LED_TOGGLE(LED1);
 		printf("EEPROM Check Failed!\r\n");
 	}
-	LED_ON(LED1);
-	AT24CXX_Read(0,(u8*)&config,sizeof(config));
-	if(config.valid_flag != 0xAA5555AA){
-		config.valid_flag = 0xAA5555AA;
-		config.baud = 9600;
-		config.cal_A = 1.0;
-		config.cal_B = 0;
-		/*config.year = 0;
-		config.month = 11;
-		config.date = 7;
-		config.hour = 14;
-		config.minute = 30;
-		config.second = 30;*/
-		config.freq = 1;
-		config.rtc_flag = 0;
-		config.ad_gain = ADS1256_GAIN_1;
-	}
-	config.rtc_flag = 0;
-	do{
-		if(usart1_recv_frame_flag) {
+	if(CONFIG_IO_GET_IN()) {
+		while(1) {
+			if(usart1_recv_frame_flag) {
 				sscanf((char*)usart1_recv, "$%d,%f,%f,%d,%d,%d,%d:%d:%d,%d,%d",&config.baud,&config.cal_A,&config.cal_B,
 					&config.year,&config.month,&config.date,&config.hour,&config.minute,&config.second,&config.ad_gain,&config.freq);
-				if(config.year !=0){
-					config.rtc_flag = 0;
-				}else{
-					config.rtc_flag = 1;
-				}
 				usart1_recv_frame_flag = 0;
-				status.sys_config_flag =1;
+				if(config.year == 0) {
+					status.rtc_flag =0;
+				} else {
+					status.rtc_flag = 1;
+				}
 				USART_SendString(USART1,usart1_recv);
+				config.head = 0xAA5555AA;
+				config.tail = 0xAA5555AA;
+				AT24CXX_Write(0,(u8*)&config,sizeof(config));
+				//AT24CXX_Read(0,(u8*)&test_config,sizeof(config));
 				break;
+			}
 		}
-		delay_ms(50);
-	}while(CONFIG_IO_GET_IN());
-	AT24CXX_Write(0,(u8*)&config,sizeof(config));
-	LED_OFF(LED1);
-	/*while(1){
-		delay_ms(500);
-		LED_TOGGLE(LED1);
-	}*/
-	while(RTC_Init(config.rtc_flag,config.year,config.month,config.date,config.hour,config.minute,config.second)) {
+	} else {	
+		AT24CXX_Read(0,(u8*)&config,sizeof(config));
+		if((config.head != 0xAA5555AA) || (config.tail != 0xAA5555AA)){
+			config.head = 0xAA5555AA;
+			config.tail = 0xAA5555AA;
+			config.baud = 9600;
+			config.cal_A = 1.0;
+			config.cal_B = 0;
+			config.year = 2018;
+			config.month = 11;
+			config.date = 8;
+			config.hour = 0;
+			config.minute = 0;
+			config.second = 0;
+			config.freq = 1;
+			config.ad_gain = ADS1256_GAIN_1;
+			AT24CXX_Write(0,(u8*)&config,sizeof(config));
+		}
+		status.rtc_flag = 0;
+	}
+	printf("usart2 baud : %d\r\n",config.baud);
+	printf("cal_A : %f\r\n",config.cal_A);
+	printf("cal_B : %f\r\n",config.cal_B);
+	printf("ad_gain : %d\r\n",config.ad_gain);
+	printf("freq : %d\r\n",config.freq);
+	LED_ON(LED1);
+	
+	while(RTC_Init(status.rtc_flag,config.year,config.month,config.date,config.hour,config.minute,config.second)) {
 		delay_ms(100);
 	}
 	
@@ -168,7 +175,7 @@ int main(void)
 	BEEP_OFF();
 	cur.sd_cap = (u32)(SDCardInfo.CardCapacity/1024/1024);
 	
-	delay_ms(1000);
+	delay_ms(500);
 	
 	//开始初始化文件系统
 	while(FR_OK != f_mount(&cur.fs,"0:",1)){
@@ -200,7 +207,11 @@ int main(void)
 	f_lseek(&cur.fsrc,cur.fsrc.fsize);
 	cur.line_num = 0;
 	cur.file_flag = 1;
-	
+	printf("usart2 baud : %d\r\n",config.baud);
+	printf("cal_A : %f\r\n",config.cal_A);
+	printf("cal_B : %f\r\n",config.cal_B);
+	printf("ad_gain : %d\r\n",config.ad_gain);
+	printf("freq : %d\r\n",config.freq);
 	if(cur.fsrc.fsize == 0){
 		LED_ON(LED0);
 		record_head();
