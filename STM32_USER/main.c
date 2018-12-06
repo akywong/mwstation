@@ -103,7 +103,8 @@ int main(void)
 	if(CONFIG_IO_GET_IN()) {
 		while(1) {
 			if(usart1_recv_frame_flag) {
-				sscanf((char*)usart1_recv, "$%d,%f,%f,%d,%d,%d,%d:%d:%d,%d,%d",&config.baud,&config.cal_A,&config.cal_B,
+				sscanf((char*)usart1_recv, "$%d,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d:%d:%d,%d,%d",&config.baud,
+					&config.cal[0].A,&config.cal[0].B,&config.cal[1].A,&config.cal[1].B,&config.cal[2].A,&config.cal[2].B,&config.cal[3].A,&config.cal[3].B,
 					&config.year,&config.month,&config.date,&config.hour,&config.minute,&config.second,&config.ad_gain,&config.freq);
 				usart1_recv_frame_flag = 0;
 				if(config.year == 0) {
@@ -126,8 +127,14 @@ int main(void)
 			config.head = 0xAA5555AA;
 			config.tail = 0xAA5555AA;
 			config.baud = 9600;
-			config.cal_A = 1.0;
-			config.cal_B = 0;
+			config.cal[0].A = 1.0;
+			config.cal[0].B = 0;
+			config.cal[1].A = 1.0;
+			config.cal[1].B = 0;
+			config.cal[2].A = 1.0;
+			config.cal[2].B = 0;
+			config.cal[3].A = 1.0;
+			config.cal[3].B = 0;
 			config.year = 2018;
 			config.month = 11;
 			config.date = 8;
@@ -141,8 +148,14 @@ int main(void)
 		status.rtc_flag = 0;
 	}
 	printf("usart2 baud : %d\r\n",config.baud);
-	printf("cal_A : %f\r\n",config.cal_A);
-	printf("cal_B : %f\r\n",config.cal_B);
+	printf("ch 0 A : %f\r\n",config.cal[0].A);
+	printf("ch 0 B : %f\r\n",config.cal[0].B);
+	printf("ch 1 A : %f\r\n",config.cal[1].A);
+	printf("ch 1 B : %f\r\n",config.cal[1].B);
+	printf("ch 2 A : %f\r\n",config.cal[2].A);
+	printf("ch 2 B : %f\r\n",config.cal[2].B);
+	printf("ch 3 A : %f\r\n",config.cal[3].A);
+	printf("ch 3 B : %f\r\n",config.cal[3].B);
 	printf("ad_gain : %d\r\n",config.ad_gain);
 	printf("freq : %d\r\n",config.freq);
 	LED_ON(LED1);
@@ -209,8 +222,14 @@ int main(void)
 	cur.line_num = 0;
 	cur.file_flag = 1;
 	printf("usart2 baud : %d\r\n",config.baud);
-	printf("cal_A : %f\r\n",config.cal_A);
-	printf("cal_B : %f\r\n",config.cal_B);
+	printf("ch 0 A : %f\r\n",config.cal[0].A);
+	printf("ch 0 B : %f\r\n",config.cal[0].B);
+	printf("ch 1 A : %f\r\n",config.cal[1].A);
+	printf("ch 1 B : %f\r\n",config.cal[1].B);
+	printf("ch 2 A : %f\r\n",config.cal[2].A);
+	printf("ch 2 B : %f\r\n",config.cal[2].B);
+	printf("ch 3 A : %f\r\n",config.cal[3].A);
+	printf("ch 3 B : %f\r\n",config.cal[3].B);
 	printf("ad_gain : %d\r\n",config.ad_gain);
 	printf("freq : %d\r\n",config.freq);
 	if(cur.fsrc.fsize == 0){
@@ -356,10 +375,10 @@ void record_file_write(void)
 		valid_flag |= BME_SENSOR_UNVALID;
 	}*/
 	if(record.ADC_count !=0 ){
-		record.ADC_value0 = (record.ADC_value0/(double)record.ADC_count)*config.cal_A+config.cal_B;
-		record.ADC_value1 = (record.ADC_value1/(double)record.ADC_count)*config.cal_A+config.cal_B;
-		record.ADC_value2 = (record.ADC_value2/(double)record.ADC_count)*config.cal_A+config.cal_B;
-		record.ADC_value3 = (record.ADC_value3/(double)record.ADC_count)*config.cal_A+config.cal_B;
+		record.ADC_value0 = (record.ADC_value0/(double)record.ADC_count)*config.cal[0].A+config.cal[0].B;
+		record.ADC_value1 = (record.ADC_value1/(double)record.ADC_count)*config.cal[1].A+config.cal[1].B;
+		record.ADC_value2 = (record.ADC_value2/(double)record.ADC_count)*config.cal[2].A+config.cal[2].B;
+		record.ADC_value3 = (record.ADC_value3/(double)record.ADC_count)*config.cal[3].A+config.cal[3].B;
 		
 		record.ADC_value0 = (record.ADC_value0 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
 		record.ADC_value1 = (record.ADC_value1 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);

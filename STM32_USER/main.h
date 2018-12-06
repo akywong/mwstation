@@ -43,8 +43,10 @@ struct wind_info{
 struct sys_config{
 	uint32_t head;
 	uint32_t baud;
-	float cal_A;
-	float cal_B;
+	struct{
+		float A;
+		float B;
+	}cal[4];
 	uint32_t year;
 	uint32_t month;
 	uint32_t date;
