@@ -118,6 +118,7 @@ int main(void)
 				//AT24CXX_Read(0,(u8*)&test_config,sizeof(config));
 				break;
 			}
+			delay_ms(50);
 		}
 	} else {	
 		AT24CXX_Read(0,(u8*)&config,sizeof(config));
