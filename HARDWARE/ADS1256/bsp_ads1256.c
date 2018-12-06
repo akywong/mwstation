@@ -10,13 +10,13 @@
       GND   -------  GND       地
 
       DRDY  ------>  PC3       准备就绪
-      CS    <------  PB12      SPI_CS
+      CS    <------  PD13      SPI_CS
       DIN   <------  PB15      SPI_MOSI
       DOUT  ------>  PB14      SPI_MISO
       SCLK  <------  PB13      SPI时钟
       GND   -------  GND       地
-      PDWN  <------  PB10      掉电控制 常高
-      RST   <------  PB11      复位信号 常高
+      PDWN  <------  PD11      掉电控制 常高
+      RST   <------  PD12      复位信号 常高
 */
 
 /*
