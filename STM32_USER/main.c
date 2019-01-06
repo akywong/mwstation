@@ -21,6 +21,7 @@
 #include "main.h"
 
 uint8_t new_file_flag = 0;
+uint32_t new_record_count = 0;
 
 uint8_t send_cmd[12] = {0x24,0x30,0x31,0x2C,0x57,0x56,0x3F,0x2A,0x2F,0x2F,0x0D,0x0A};//$01,WV?*//
 
@@ -296,7 +297,7 @@ int main(void)
 			} 
     }
 		//记录温湿度计信息
-		if((tick_count - status.last_sensor) >400) {
+		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
 			status.last_sensor = tick_count;
 			if(BME280_OK == bme280_get_sensor_data(BME280_ALL, &comp_data, &dev)){
 				record.humidity += comp_data.humidity;
@@ -306,7 +307,7 @@ int main(void)
 			}
 		}
 		//记录AD转换信息
-		if((tick_count - status.last_adc) > 400) {
+		if(((tick_count - status.last_adc) > 400) || (tick_count < status.last_adc)) {
 			status.last_adc = tick_count;
 			record.ADC_value0 += (double)ADS1256_GetAdc(0);
 			record.ADC_value1 += (double)ADS1256_GetAdc(1);
@@ -318,9 +319,9 @@ int main(void)
 			}
 		}
 		//写文件
-		if((tick_count - status.last_record_tick) > (499*config.freq)){
+		if(((new_record_count - status.last_record_tick) >= config.freq) || (new_record_count < status.last_record_tick)){
 			LED_ON(LED0);
-			status.last_record_tick = tick_count;
+			status.last_record_tick = new_record_count;
 			record_file_write();
 			LED_OFF(LED0);
 		}

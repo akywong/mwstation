@@ -180,7 +180,8 @@ u8 RTC_Get(void)
 	static u16 daycnt=0;
 	u32 timecount=0; 
 	u32 temp=0;
-	u16 temp1=0;	  
+	u16 temp1=0;	
+	u16  old_second=0;
     timecount=RTC_GetCounter();	 
  	temp=timecount/86400;   //得到天数(秒钟数对应的)
 	if(daycnt!=temp){//超过一天了
@@ -216,7 +217,11 @@ u8 RTC_Get(void)
 	temp=timecount%86400;     		//得到秒钟数   	   
 	calendar.hour=temp/3600;     	//小时
 	calendar.min=(temp%3600)/60; 	//分钟	
+	old_second = calendar.sec;
 	calendar.sec=(temp%3600)%60; 	//秒钟
+	if(old_second != calendar.sec) {
+		new_record_count++;
+	}
 	calendar.week=RTC_Get_Week(calendar.w_year,calendar.w_month,calendar.w_date);//获取星期   
 	return 0;
 }	 

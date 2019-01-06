@@ -60,4 +60,5 @@ struct sys_config{
 };
 
 extern uint8_t new_file_flag;
+extern uint32_t new_record_count;
 #endif
