@@ -5,14 +5,15 @@
 #include "stdio.h"
 #include "sys.h"
 
+#define USART_FRAME_MAX_SIZE  256
 
-extern uint8_t usart1_recv[64];
-extern uint8_t usart1_recv_cnt;
+extern uint8_t usart1_recv[USART_FRAME_MAX_SIZE];
+extern uint32_t usart1_recv_cnt;
 extern uint8_t usart1_recv_frame_flag;
 extern uint8_t usart1_recv_flag;
 
-extern uint8_t usart2_recv[32];
-extern uint8_t usart2_recv_cnt;
+extern uint8_t usart2_recv[USART_FRAME_MAX_SIZE];
+extern uint32_t usart2_recv_cnt;
 extern uint8_t usart2_recv_frame_flag;
 extern uint8_t usart2_recv_flag;
 

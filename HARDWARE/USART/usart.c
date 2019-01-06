@@ -20,13 +20,13 @@
 #define PRINTF_COM     USART1//printf 端口选择  USART1、USART2、USART3、UART4、UART5
 
 
-uint8_t usart1_recv[64]={0};
-uint8_t usart1_recv_cnt=0;
+uint8_t usart1_recv[USART_FRAME_MAX_SIZE]={0};
+uint32_t usart1_recv_cnt=0;
 uint8_t usart1_recv_frame_flag=0;
 uint8_t usart1_recv_flag=0;
 
-uint8_t usart2_recv[32]={0};
-uint8_t usart2_recv_cnt=0;
+uint8_t usart2_recv[USART_FRAME_MAX_SIZE]={0};
+uint32_t usart2_recv_cnt=0;
 uint8_t usart2_recv_frame_flag=0;
 uint8_t usart2_recv_flag=0;
 
@@ -137,7 +137,7 @@ void USART1_IRQHandler(void)                	//串口1中断服务程序
 	uint8_t Clear=Clear;
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{ 
-			if(usart1_recv_cnt < 64) {
+			if(usart1_recv_cnt < USART_FRAME_MAX_SIZE) {
         usart1_recv[usart1_recv_cnt++] = USART1->DR;
       }
 			usart1_recv_flag = 1;
