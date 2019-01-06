@@ -373,7 +373,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\STM32_USER;..\CORE;..\STM32F10x_FWLib\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\IIC;..\HARDWARE\SPI;..\HARDWARE\LED;..\HARDWARE\SDIO;..\HARDWARE\BEEP;..\HARDWARE\USART;..\HARDWARE\IO_SPI;..\HARDWARE\W25QXX;..\MODULES\FATFS;..\MODULES\FATFS\src;..\MODULES\FATFS\src\option;..\HARDWARE\RTX;..\HARDWARE\RTC;..\HARDWARE\TIMER;..\HARDWARE\ADC;..\HARDWARE\SPI;..\HARDWARE\BME280;..\HARDWARE\ADS1256;..\HARDWARE\KEY;..\HARDWARE\24CXX;..\HARDWARE\IO_IIC</IncludePath>
+              <IncludePath>..\STM32_USER;..\CORE;..\STM32F10x_FWLib\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\IIC;..\HARDWARE\SPI;..\HARDWARE\LED;..\HARDWARE\SDIO;..\HARDWARE\BEEP;..\HARDWARE\USART;..\HARDWARE\IO_SPI;..\HARDWARE\W25QXX;..\MODULES\FATFS;..\MODULES\FATFS\src;..\MODULES\FATFS\src\option;..\HARDWARE\RTX;..\HARDWARE\RTC;..\HARDWARE\TIMER;..\HARDWARE\ADC;..\HARDWARE\SPI;..\HARDWARE\BME280;..\HARDWARE\ADS1256;..\HARDWARE\KEY;..\HARDWARE\24CXX;..\HARDWARE\IO_IIC;..\HARDWARE\IWDG</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -544,6 +544,11 @@
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\IO_IIC\ioiic.c</FilePath>
             </File>
+            <File>
+              <FileName>iwdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\IWDG\iwdg.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -683,6 +688,11 @@
               <FileName>stm32f10x_exti.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\STM32F10x_FWLib\src\stm32f10x_exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_iwdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32F10x_FWLib\src\stm32f10x_iwdg.c</FilePath>
             </File>
           </Files>
         </Group>

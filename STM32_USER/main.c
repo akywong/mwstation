@@ -17,6 +17,7 @@
 //#include "adc.h"
 #include "bme280.h"
 #include "bsp_ads1256.h"
+#include "iwdg.h"
 #include "main.h"
 
 uint8_t new_file_flag = 0;
@@ -245,8 +246,10 @@ int main(void)
         status.last_cmd_tick = tick_count;
     }
 	//LED_ON(LED1);
+	IWDG_Init_2s();
 	while(1)
 	{
+		IWDG_Feed();
 		if(new_file_flag == 1) {
 			f_close(&cur.fsrc);
 			new_file_flag = 0;
@@ -321,6 +324,7 @@ int main(void)
 			record_file_write();
 			LED_OFF(LED0);
 		}
+		delay_ms(100);
 	}
 }
 //检查风速计信息格式
