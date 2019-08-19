@@ -316,6 +316,8 @@ int main(void)
 			record.ADC_count++;
 			if(ADS1256_GetAdc(8)) {
 				USART_SendString(USART1," ADS1256 RESET\r\n");
+				ADS1256_CfgADC((ADS1256_GAIN_E)config.ad_gain, ADS1256_5SPS);
+				ADS1256_StartScan(1);	
 			}
 		}
 		//п╢нд╪Ч
