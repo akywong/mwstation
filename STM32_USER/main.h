@@ -26,7 +26,8 @@ struct sys_status{
 		uint32_t last_wind_info;
 		uint32_t last_adc;
 		uint32_t last_sensor;//ÎÂÊª¶È¼Æ
-    uint8_t cmd_send_flag;
+    uint32_t last_press;
+		uint8_t cmd_send_flag;
     uint8_t lora_send_flag;
 		uint8_t stop_feed_flag;
 		uint8_t rtc_flag;

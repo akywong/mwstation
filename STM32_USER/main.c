@@ -1,6 +1,7 @@
 /*  main.c  */
 
 #include "sys.h"
+#include "stm32f10x_flash.h"
 #include "delay.h"
 #include "serial_rtx.h"
 #include "usart.h"
@@ -18,6 +19,7 @@
 #include "bme280.h"
 #include "bsp_ads1256.h"
 #include "iwdg.h"
+#include "hyt939.h"
 #include "main.h"
 
 uint8_t new_file_flag = 0;
@@ -82,6 +84,22 @@ int main(void)
 	memset(ADC_value,0,sizeof(double)*ADC_CHAN_NUM);
 	memset(&record, 0, sizeof(record));
 	memset(&record_old, 0, sizeof(record_old));
+	
+	/*
+	RCC_DeInit();
+	RCC_HSICmd(ENABLE); 
+	while(RCC_GetFlagStatus(RCC_FLAG_HSIRDY)== RESET);
+	RCC_HCLKConfig(RCC_SYSCLK_Div1); 
+	RCC_PCLK2Config(RCC_HCLK_Div1);    
+	RCC_PCLK1Config(RCC_HCLK_Div2);    
+	FLASH_SetLatency(FLASH_Latency_2);
+	FLASH_PrefetchBufferCmd(FLASH_PrefetchBuffer_Enable);
+	RCC_PLLConfig(RCC_PLLSource_HSI_Div2, RCC_PLLMul_16);  
+	RCC_PLLCmd(ENABLE);
+	while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET) ;   
+	RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK); 
+	while(RCC_GetSYSCLKSource() != 0x08);
+	*/
 	delay_init();	    //延时函数初始化
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置中断优先级分组为组2：2位抢占优先级，2位响应优先级
 	TIM_SetInterval(1,2000);//1ms
@@ -168,10 +186,10 @@ int main(void)
 	
 	bme280_init(&dev);
 	
-	bsp_InitADS1256();
+	//bsp_InitADS1256();
 	
-	ADS1256_CfgADC((ADS1256_GAIN_E)config.ad_gain, ADS1256_5SPS);
-	ADS1256_StartScan(1);	
+	//ADS1256_CfgADC((ADS1256_GAIN_E)config.ad_gain, ADS1256_5SPS);
+	//ADS1256_StartScan(1);	
 	
 	status.cmd_send_flag = 1;
 	
@@ -246,6 +264,7 @@ int main(void)
 				USART_SendBuf(USART2,send_cmd,12);
         status.last_cmd_tick = tick_count;
     }
+	HYT939_Measure_Request();
 	//LED_ON(LED1);
 	IWDG_Init_2s();
 	while(1)
@@ -297,17 +316,28 @@ int main(void)
 			} 
     }
 		//记录温湿度计信息
-		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
-			status.last_sensor = tick_count;
+		if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
+			status.last_press = tick_count;
 			if(BME280_OK == bme280_get_sensor_data(BME280_ALL, &comp_data, &dev)){
-				record.humidity += comp_data.humidity;
-				record.temperature += comp_data.temperature;
+				//record.humidity += comp_data.humidity;
+				//record.temperature += comp_data.temperature;
 				record.pressure += comp_data.pressure;
 				record.sensor_count++;
 			}
 		}
+		
+		//记录温湿度计信息
+		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
+			status.last_sensor = tick_count;
+			if(0==HYT939_Data_Fetch(&comp_data.humidity,&comp_data.temperature)) {
+				record.humidity += comp_data.humidity;
+				record.temperature += comp_data.temperature;
+			}
+			record.sensor_count++;
+		}
+		
 		//记录AD转换信息
-		if(((tick_count - status.last_adc) > 400) || (tick_count < status.last_adc)) {
+		/*if(((tick_count - status.last_adc) > 400) || (tick_count < status.last_adc)) {
 			status.last_adc = tick_count;
 			record.ADC_value0 += (double)ADS1256_GetAdc(0);
 			record.ADC_value1 += (double)ADS1256_GetAdc(1);
@@ -319,7 +349,7 @@ int main(void)
 				ADS1256_CfgADC((ADS1256_GAIN_E)config.ad_gain, ADS1256_5SPS);
 				ADS1256_StartScan(1);	
 			}
-		}
+		}*/
 		//写文件
 		if(((new_record_count - status.last_record_tick) >= config.freq) || (new_record_count < status.last_record_tick)){
 			LED_ON(LED0);
