@@ -49,6 +49,7 @@ struct record_info{
 	uint32_t wind_count;
 	double temperature;
 	double humidity;
+	uint32_t press_count;
 	double pressure;
 	uint32_t sensor_count;
 	double ADC_value0;
@@ -63,7 +64,7 @@ struct record_info record_old;
 #define CONFIG_GPIO     GPIOA
 #define CONFIG_PIN			GPIO_Pin_1
 #define CONFIG_IO_RCC_CLK RCC_APB2Periph_GPIOA
-#define CONFIG_IO_GET_IN()  ((CONFIG_GPIO->IDR & CONFIG_PIN)?(1):(0))
+#define CONFIG_IO_GET_IN()  (0)//((CONFIG_GPIO->IDR & CONFIG_PIN)?(1):(0))
 void config_gpio_init(void)
 {
 	GPIO_InitTypeDef  GPIO_InitStructure;
@@ -85,8 +86,9 @@ int main(void)
 	memset(&record, 0, sizeof(record));
 	memset(&record_old, 0, sizeof(record_old));
 	
-	/*
-	RCC_DeInit();
+	//return 0;
+
+	/*RCC_DeInit();
 	RCC_HSICmd(ENABLE); 
 	while(RCC_GetFlagStatus(RCC_FLAG_HSIRDY)== RESET);
 	RCC_HCLKConfig(RCC_SYSCLK_Div1); 
@@ -98,8 +100,8 @@ int main(void)
 	RCC_PLLCmd(ENABLE);
 	while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET) ;   
 	RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK); 
-	while(RCC_GetSYSCLKSource() != 0x08);
-	*/
+	while(RCC_GetSYSCLKSource() != 0x08);*/
+	
 	delay_init();	    //延时函数初始化
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置中断优先级分组为组2：2位抢占优先级，2位响应优先级
 	TIM_SetInterval(1,2000);//1ms
@@ -155,8 +157,8 @@ int main(void)
 			config.cal[2].B = 0;
 			config.cal[3].A = 1.0;
 			config.cal[3].B = 0;
-			config.year = 2018;
-			config.month = 11;
+			config.year = 2019;
+			config.month = 16;
 			config.date = 8;
 			config.hour = 0;
 			config.minute = 0;
@@ -165,7 +167,7 @@ int main(void)
 			config.ad_gain = ADS1256_GAIN_1;
 			AT24CXX_Write(0,(u8*)&config,sizeof(config));
 		}
-		status.rtc_flag = 0;
+		status.rtc_flag = 1;
 	}
 	printf("usart2 baud : %d\r\n",config.baud);
 	printf("ch 0 A : %f\r\n",config.cal[0].A);
@@ -185,6 +187,8 @@ int main(void)
 	}
 	
 	bme280_init(&dev);
+	
+	HYT939_Measure_Request();
 	
 	//bsp_InitADS1256();
 	
@@ -260,10 +264,13 @@ int main(void)
 	
 	USART2_Init(config.baud); //串口2初始化
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
+	
+	/*USART3_Init(config.baud); //串口2初始化
+	USART_ITConfig(USART3, USART_IT_IDLE, ENABLE);
 	if(status.cmd_send_flag ) {
 				USART_SendBuf(USART2,send_cmd,12);
         status.last_cmd_tick = tick_count;
-    }
+    }*/
 	HYT939_Measure_Request();
 	//LED_ON(LED1);
 	IWDG_Init_2s();
@@ -315,16 +322,16 @@ int main(void)
         }
 			} 
     }
-		//记录温湿度计信息
-		if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
+		//记录气压计信息
+		/*if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
 			status.last_press = tick_count;
 			if(BME280_OK == bme280_get_sensor_data(BME280_ALL, &comp_data, &dev)){
 				//record.humidity += comp_data.humidity;
 				//record.temperature += comp_data.temperature;
 				record.pressure += comp_data.pressure;
-				record.sensor_count++;
+				record.press_count++;
 			}
-		}
+		}*/
 		
 		//记录温湿度计信息
 		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
@@ -334,6 +341,7 @@ int main(void)
 				record.temperature += comp_data.temperature;
 			}
 			record.sensor_count++;
+			HYT939_Measure_Request();
 		}
 		
 		//记录AD转换信息
@@ -428,14 +436,19 @@ void record_file_write(void)
 		record.ADC_value3 = record_old.ADC_value3;*/
 	}
 	
-	if(record.sensor_count !=0 ){
-		record.humidity /= ((double)record.sensor_count);
-		record.temperature /= ((double)record.sensor_count);
-		record.pressure /= ((double)record.sensor_count);
+	if(record.press_count !=0 ){
+		//record.humidity /= ((double)record.sensor_count);
+		//record.temperature /= ((double)record.sensor_count);
+		record.pressure /= ((double)record.press_count);
 	}else{
 		/*record.humidity = record_old.humidity;
 		record.temperature = record_old.temperature;
 		record.pressure = record_old.pressure;*/
+	}
+	if(record.sensor_count !=0 ){
+		record.humidity /= ((double)record.sensor_count);
+		record.temperature /= ((double)record.sensor_count);
+		//record.pressure /= ((double)record.sensor_count);
 	}
 	if(record.wind_count != 0) {
 		record.wind_speed /= ((double)record.wind_count);
@@ -469,6 +482,8 @@ void record_file_write(void)
 		}*/
 		//memcpy(&record_old, &record, sizeof(struct record_info));
 		USART_SendString(USART1,(unsigned char *)prefix);
+		//USART_SendString(USART2,(unsigned char *)prefix);
+		//USART_SendString(USART3,(unsigned char *)prefix);
 		record_old.ADC_value0 = record.ADC_value0;
 		record_old.ADC_value1 = record.ADC_value1;
 		record_old.ADC_value2 = record.ADC_value2;
@@ -516,7 +531,7 @@ void record_head(void)
 	}
 }
 
-void get_ADC_value(void)
+/*void get_ADC_value(void)
 {
 	int32_t adc[ADC_CHAN_NUM];
 	int i;
@@ -526,4 +541,4 @@ void get_ADC_value(void)
 		adc[i] = ADS1256_GetAdc(i);
 		ADC_value[i] = ((double)adc[i] * 2500000.0) / 4194303.0;
 	}
-}
+}*/
