@@ -429,11 +429,6 @@
               <FileType>1</FileType>
               <FilePath>..\STM32_USER\stm32f10x_it.c</FilePath>
             </File>
-            <File>
-              <FileName>system_stm32f10x.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\STM32_USER\system_stm32f10x.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -604,6 +599,11 @@
         <Group>
           <GroupName>CORE</GroupName>
           <Files>
+            <File>
+              <FileName>system_stm32f10x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32_USER\system_stm32f10x.c</FilePath>
+            </File>
             <File>
               <FileName>core_cm3.c</FileName>
               <FileType>1</FileType>

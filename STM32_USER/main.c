@@ -27,9 +27,6 @@ uint32_t new_record_count = 0;
 
 uint8_t send_cmd[12] = {0x24,0x30,0x31,0x2C,0x57,0x56,0x3F,0x2A,0x2F,0x2F,0x0D,0x0A};//$01,WV?*//
 
-#define ADC_CHAN_NUM 4
-double ADC_value[ADC_CHAN_NUM];
-
 //
 struct sys_status status;
 struct sys_config config;
@@ -49,14 +46,9 @@ struct record_info{
 	uint32_t wind_count;
 	double temperature;
 	double humidity;
-	uint32_t press_count;
-	double pressure;
 	uint32_t sensor_count;
-	double ADC_value0;
-	double ADC_value1;
-	double ADC_value2;
-	double ADC_value3;
-	uint32_t ADC_count;
+	double pressure;
+	uint32_t press_count;
 };
 struct record_info record;
 struct record_info record_old;
@@ -82,25 +74,8 @@ int main(void)
 	memset(&cur, 0, sizeof(struct fs_status));
 	memset(&status, 0, sizeof(struct sys_status));
 	memset(&wind, 0,sizeof(struct wind_info));
-	memset(ADC_value,0,sizeof(double)*ADC_CHAN_NUM);
 	memset(&record, 0, sizeof(record));
 	memset(&record_old, 0, sizeof(record_old));
-	
-	//return 0;
-
-	/*RCC_DeInit();
-	RCC_HSICmd(ENABLE); 
-	while(RCC_GetFlagStatus(RCC_FLAG_HSIRDY)== RESET);
-	RCC_HCLKConfig(RCC_SYSCLK_Div1); 
-	RCC_PCLK2Config(RCC_HCLK_Div1);    
-	RCC_PCLK1Config(RCC_HCLK_Div2);    
-	FLASH_SetLatency(FLASH_Latency_2);
-	FLASH_PrefetchBufferCmd(FLASH_PrefetchBuffer_Enable);
-	RCC_PLLConfig(RCC_PLLSource_HSI_Div2, RCC_PLLMul_16);  
-	RCC_PLLCmd(ENABLE);
-	while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET) ;   
-	RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK); 
-	while(RCC_GetSYSCLKSource() != 0x08);*/
 	
 	delay_init();	    //延时函数初始化
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置中断优先级分组为组2：2位抢占优先级，2位响应优先级
@@ -118,16 +93,14 @@ int main(void)
 	while(AT24CXX_Check())
 	{
 		delay_ms(500);
-		//delay_ms(500);
 		LED_TOGGLE(LED1);
 		printf("EEPROM Check Failed!\r\n");
 	}
 	if(CONFIG_IO_GET_IN()) {
 		while(1) {
 			if(usart1_recv_frame_flag) {
-				sscanf((char*)usart1_recv, "$%d,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d,%d,%d:%d:%d,%d,%d",&config.baud,
-					&config.cal[0].A,&config.cal[0].B,&config.cal[1].A,&config.cal[1].B,&config.cal[2].A,&config.cal[2].B,&config.cal[3].A,&config.cal[3].B,
-					&config.year,&config.month,&config.date,&config.hour,&config.minute,&config.second,&config.ad_gain,&config.freq);
+				sscanf((char*)usart1_recv, "$%d,%d,%d,%d,%d:%d:%d,%d",&config.baud,
+					&config.year,&config.month,&config.date,&config.hour,&config.minute,&config.second,&config.freq);
 				usart1_recv_frame_flag = 0;
 				if(config.year == 0) {
 					status.rtc_flag =0;
@@ -149,14 +122,6 @@ int main(void)
 			config.head = 0xAA5555AA;
 			config.tail = 0xAA5555AA;
 			config.baud = 9600;
-			config.cal[0].A = 1.0;
-			config.cal[0].B = 0;
-			config.cal[1].A = 1.0;
-			config.cal[1].B = 0;
-			config.cal[2].A = 1.0;
-			config.cal[2].B = 0;
-			config.cal[3].A = 1.0;
-			config.cal[3].B = 0;
 			config.year = 2019;
 			config.month = 16;
 			config.date = 8;
@@ -164,21 +129,11 @@ int main(void)
 			config.minute = 0;
 			config.second = 0;
 			config.freq = 1;
-			config.ad_gain = ADS1256_GAIN_1;
 			AT24CXX_Write(0,(u8*)&config,sizeof(config));
 		}
 		status.rtc_flag = 1;
 	}
 	printf("usart2 baud : %d\r\n",config.baud);
-	printf("ch 0 A : %f\r\n",config.cal[0].A);
-	printf("ch 0 B : %f\r\n",config.cal[0].B);
-	printf("ch 1 A : %f\r\n",config.cal[1].A);
-	printf("ch 1 B : %f\r\n",config.cal[1].B);
-	printf("ch 2 A : %f\r\n",config.cal[2].A);
-	printf("ch 2 B : %f\r\n",config.cal[2].B);
-	printf("ch 3 A : %f\r\n",config.cal[3].A);
-	printf("ch 3 B : %f\r\n",config.cal[3].B);
-	printf("ad_gain : %d\r\n",config.ad_gain);
 	printf("freq : %d\r\n",config.freq);
 	LED_ON(LED1);
 	
@@ -189,11 +144,6 @@ int main(void)
 	bme280_init(&dev);
 	
 	HYT939_Measure_Request();
-	
-	//bsp_InitADS1256();
-	
-	//ADS1256_CfgADC((ADS1256_GAIN_E)config.ad_gain, ADS1256_5SPS);
-	//ADS1256_StartScan(1);	
 	
 	status.cmd_send_flag = 1;
 	
@@ -246,15 +196,6 @@ int main(void)
 	cur.line_num = 0;
 	cur.file_flag = 1;
 	printf("usart2 baud : %d\r\n",config.baud);
-	printf("ch 0 A : %f\r\n",config.cal[0].A);
-	printf("ch 0 B : %f\r\n",config.cal[0].B);
-	printf("ch 1 A : %f\r\n",config.cal[1].A);
-	printf("ch 1 B : %f\r\n",config.cal[1].B);
-	printf("ch 2 A : %f\r\n",config.cal[2].A);
-	printf("ch 2 B : %f\r\n",config.cal[2].B);
-	printf("ch 3 A : %f\r\n",config.cal[3].A);
-	printf("ch 3 B : %f\r\n",config.cal[3].B);
-	printf("ad_gain : %d\r\n",config.ad_gain);
 	printf("freq : %d\r\n",config.freq);
 	if(cur.fsrc.fsize == 0){
 		LED_ON(LED0);
@@ -273,10 +214,10 @@ int main(void)
     }*/
 	HYT939_Measure_Request();
 	//LED_ON(LED1);
-	IWDG_Init_2s();
+	//IWDG_Init_2s();
 	while(1)
 	{
-		IWDG_Feed();
+		//IWDG_Feed();
 		if(new_file_flag == 1) {
 			f_close(&cur.fsrc);
 			new_file_flag = 0;
@@ -323,7 +264,7 @@ int main(void)
 			} 
     }
 		//记录气压计信息
-		/*if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
+		if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
 			status.last_press = tick_count;
 			if(BME280_OK == bme280_get_sensor_data(BME280_ALL, &comp_data, &dev)){
 				//record.humidity += comp_data.humidity;
@@ -331,7 +272,7 @@ int main(void)
 				record.pressure += comp_data.pressure;
 				record.press_count++;
 			}
-		}*/
+		}
 		
 		//记录温湿度计信息
 		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
@@ -339,25 +280,10 @@ int main(void)
 			if(0==HYT939_Data_Fetch(&comp_data.humidity,&comp_data.temperature)) {
 				record.humidity += comp_data.humidity;
 				record.temperature += comp_data.temperature;
+				record.sensor_count++;
 			}
-			record.sensor_count++;
 			HYT939_Measure_Request();
 		}
-		
-		//记录AD转换信息
-		/*if(((tick_count - status.last_adc) > 400) || (tick_count < status.last_adc)) {
-			status.last_adc = tick_count;
-			record.ADC_value0 += (double)ADS1256_GetAdc(0);
-			record.ADC_value1 += (double)ADS1256_GetAdc(1);
-			record.ADC_value2 += (double)ADS1256_GetAdc(2);
-			record.ADC_value3 += (double)ADS1256_GetAdc(3);
-			record.ADC_count++;
-			if(ADS1256_GetAdc(8)) {
-				USART_SendString(USART1," ADS1256 RESET\r\n");
-				ADS1256_CfgADC((ADS1256_GAIN_E)config.ad_gain, ADS1256_5SPS);
-				ADS1256_StartScan(1);	
-			}
-		}*/
 		//写文件
 		if(((new_record_count - status.last_record_tick) >= config.freq) || (new_record_count < status.last_record_tick)){
 			LED_ON(LED0);
@@ -413,28 +339,6 @@ void record_file_write(void)
 	u8 ret;
 	int len;
 	char prefix[128]={0};
-	/*if(tick_count-status.last_wind_info>1500) {
-		valid_flag |= WIND_INFO_UNVALID;
-	}
-	if(BME280_OK != bme280_get_sensor_data(BME280_ALL, &comp_data, &dev)){
-		valid_flag |= BME_SENSOR_UNVALID;
-	}*/
-	if(record.ADC_count !=0 ){
-		record.ADC_value0 = (record.ADC_value0/(double)record.ADC_count)*config.cal[0].A+config.cal[0].B;
-		record.ADC_value1 = (record.ADC_value1/(double)record.ADC_count)*config.cal[1].A+config.cal[1].B;
-		record.ADC_value2 = (record.ADC_value2/(double)record.ADC_count)*config.cal[2].A+config.cal[2].B;
-		record.ADC_value3 = (record.ADC_value3/(double)record.ADC_count)*config.cal[3].A+config.cal[3].B;
-		
-		record.ADC_value0 = (record.ADC_value0 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
-		record.ADC_value1 = (record.ADC_value1 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
-		record.ADC_value2 = (record.ADC_value2 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
-		record.ADC_value3 = (record.ADC_value3 * 2.5000000) / 4194303.0/(double)(1<<config.ad_gain);
-	}else{
-		/*record.ADC_value0 = record_old.ADC_value0;
-		record.ADC_value1 = record_old.ADC_value1;
-		record.ADC_value2 = record_old.ADC_value2;
-		record.ADC_value3 = record_old.ADC_value3;*/
-	}
 	
 	if(record.press_count !=0 ){
 		//record.humidity /= ((double)record.sensor_count);
@@ -457,10 +361,9 @@ void record_file_write(void)
 		/*record.wind_speed = record_old.wind_speed;
 		record.wind_direction = record_old.wind_direction;*/
 	}
-	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%5d,%8.6f,%8.6f,%8.6f,%8.6f,%6.2f,%6.2f,%7.2f,%6.2f,%7.2f",
+	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%5d,%6.2f,%6.2f,%7.2f,%6.2f,%7.2f",
 											calendar.w_year,calendar.w_month,calendar.w_date,calendar.hour,calendar.min,calendar.sec,
-											cur.line_num,record.ADC_value0,record.ADC_value1,record.ADC_value2,record.ADC_value3,
-											record.wind_speed,record.wind_direction,
+											cur.line_num,record.wind_speed,record.wind_direction,
 											record.temperature, record.humidity, record.pressure/100.0
 											);
 	
@@ -484,10 +387,6 @@ void record_file_write(void)
 		USART_SendString(USART1,(unsigned char *)prefix);
 		//USART_SendString(USART2,(unsigned char *)prefix);
 		//USART_SendString(USART3,(unsigned char *)prefix);
-		record_old.ADC_value0 = record.ADC_value0;
-		record_old.ADC_value1 = record.ADC_value1;
-		record_old.ADC_value2 = record.ADC_value2;
-		record_old.ADC_value3 = record.ADC_value3;
 		record_old.humidity = record.humidity;
 		record_old.temperature = record.temperature;
 		record_old.pressure = record.pressure;
