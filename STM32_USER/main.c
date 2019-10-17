@@ -33,13 +33,13 @@ uint8_t send_htq_cmd[12]={0x24,0x30,0x31,0x2C,0x48,0x54,0x3F,0x2A,0x2F,0x2F,0x0D
 uint16_t record_interval[6]={1,1,10,60,600,3600};
 
 struct record_info{
-	double wind_speed;
-	double wind_direction;
+	float wind_speed;
+	float wind_direction;
 	uint32_t wind_count;
-	double temperature;
-	double humidity;
+	float temperature;
+	float humidity;
 	uint32_t sensor_count;
-	double pressure;
+	float pressure;
 	uint32_t press_count;
 };
 struct record_info record;
@@ -60,12 +60,12 @@ void record_file_write(void);
 //void record_head(void);
 uint32_t check_config(uint8_t *data);
 uint32_t check_cmd(uint8_t *data);
-uint8_t check_between(int min, int max, double data);
-uint8_t check_wind_speed(double speed);
-uint8_t check_wind_direction(double direction);
-uint8_t check_temperature(double temp);
-uint8_t check_pressure(double pressure);
-uint8_t check_humidity(double humidity);
+uint8_t check_between(int min, int max, float data);
+uint8_t check_wind_speed(float speed);
+uint8_t check_wind_direction(float direction);
+uint8_t check_temperature(float temp);
+uint8_t check_pressure(float pressure);
+uint8_t check_humidity(float humidity);
 uint8_t check_record(struct record_info r);
 uint8_t pack_data(uint8_t *data,struct record_info r);
 
@@ -106,16 +106,15 @@ int main(void)
 	
 	USART1_Init(115200); //串口1初始化
 	USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
-	USART2_Init(9600); //串口2初始化
-	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
 	USART3_Init(9600); //串口3初始化
 	USART_ITConfig(USART3, USART_IT_IDLE, ENABLE);
+	
 	
 	{
 		config_t.head = 0xAA;
 		config_t.tail = 0xAA;
 		config_t.type = 0x01;
-		config_t.freq = 0;
+		config_t.freq = 1;
 		config_t.heat_flag = 0;
 		config_t.crc = CRC_calCrc8((const unsigned char *)(&config_t), sizeof(config_t)-2);
 		USART_SendBuf(USART3,(unsigned char*)&config_t,sizeof(config_t));
@@ -186,6 +185,7 @@ int main(void)
 		delay_ms(100);
 	}
 	
+	
 	bme280_init(&dev);
 	
 	HYT939_Measure_Request();
@@ -237,10 +237,8 @@ int main(void)
 		LED_OFF(LED0);
 	}*/
 	
-	/*if(status.cmd_send_flag ) {
-				USART_SendBuf(USART2,send_cmd,12);
-        status.last_cmd_tick = tick_count;
-    }*/
+	USART2_Init(9600); //串口2初始化
+	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
 	HYT939_Measure_Request();
 	//IWDG_Init_2s();
 	IO_OFF(WINDRE);
@@ -274,7 +272,7 @@ int main(void)
 			}else if(check_cmd((uint8_t *)usart3_recv)){
 				uint8_t uart_data[64];
 				if(pack_data(uart_data,record_last)){
-					USART_SendString(USART3,uart_data);
+					USART_SendBuf(USART3,uart_data,24);
 				}
 			}
 		}
@@ -302,7 +300,6 @@ int main(void)
 				if((tick_count - status.last_cmd_tick) > 400){
 					USART_SendBuf(USART2,send_cmd,12);
           status.last_cmd_tick = tick_count;
-					delay_ms(15);
         }
 			} 
     }
@@ -412,22 +409,22 @@ void record_file_write(void)
 	uint8_t uart_data[64]={0};
 	
 	if(record.press_count !=0 ){
-		//record.humidity /= ((double)record.sensor_count);
-		//record.temperature /= ((double)record.sensor_count);
-		record.pressure /= ((double)record.press_count);
+		//record.humidity /= ((float)record.sensor_count);
+		//record.temperature /= ((float)record.sensor_count);
+		record.pressure /= ((float)record.press_count);
 	}else{
 		/*record.humidity = record_old.humidity;
 		record.temperature = record_old.temperature;
 		record.pressure = record_old.pressure;*/
 	}
 	if(record.sensor_count !=0 ){
-		record.humidity /= ((double)record.sensor_count);
-		record.temperature /= ((double)record.sensor_count);
-		//record.pressure /= ((double)record.sensor_count);
+		record.humidity /= ((float)record.sensor_count);
+		record.temperature /= ((float)record.sensor_count);
+		//record.pressure /= ((float)record.sensor_count);
 	}
 	if(record.wind_count != 0) {
-		record.wind_speed /= ((double)record.wind_count);
-		record.wind_direction /= ((double)record.wind_count);
+		record.wind_speed /= ((float)record.wind_count);
+		record.wind_direction /= ((float)record.wind_count);
 	}else{
 		/*record.wind_speed = record_old.wind_speed;
 		record.wind_direction = record_old.wind_direction;*/
@@ -454,10 +451,8 @@ void record_file_write(void)
 		//memcpy(&record_old, &record, sizeof(struct record_info));
 		USART_SendString(USART1,(unsigned char *)prefix);
 		if(pack_data(uart_data,record)){
-			USART_SendString(USART3,uart_data);
+			USART_SendBuf(USART3,uart_data,24);
 		}
-		//USART_SendString(USART2,(unsigned char *)prefix);
-		//USART_SendString(USART3,(unsigned char *)prefix);
 		record_old.humidity = record.humidity;
 		record_old.temperature = record.temperature;
 		record_old.pressure = record.pressure;
@@ -539,7 +534,7 @@ uint8_t pack_data(uint8_t *data,struct record_info r)
 	}
 	return 0;
 }
-uint8_t check_between(int min, int max, double data)
+uint8_t check_between(int min, int max, float data)
 {
 	if((data>=min) && (data<=max)){
 		return 1;
@@ -548,27 +543,27 @@ uint8_t check_between(int min, int max, double data)
 	}
 }
 //检测风速
-uint8_t check_wind_speed(double speed)
+uint8_t check_wind_speed(float speed)
 {
 	return check_between(0,75,speed);
 }
 //
-uint8_t check_wind_direction(double direction)
+uint8_t check_wind_direction(float direction)
 {
 	return check_between(0,360,direction);
 }
 //
-uint8_t check_temperature(double temp)
+uint8_t check_temperature(float temp)
 {
 	return check_between(-40,80,temp);
 }
 //
-uint8_t check_pressure(double pressure)
+uint8_t check_pressure(float pressure)
 {
-	return check_between(330,1100,pressure);
+	return check_between(33000,110000,pressure);
 }
 //
-uint8_t check_humidity(double humidity)
+uint8_t check_humidity(float humidity)
 {
 	return check_between(0,100,humidity);
 }
