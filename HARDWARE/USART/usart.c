@@ -239,19 +239,19 @@ void USART3_IRQHandler(void)
 	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
 	{ 
 			if(usart3_recv_cnt < 32) {
-        usart2_recv[usart3_recv_cnt++] = USART3->DR;
+        usart3_recv[usart3_recv_cnt++] = USART3->DR;
       }
-			usart2_recv_flag = 1;
+			usart3_recv_flag = 1;
 	} 
 	else if(USART_GetITStatus(USART3, USART_IT_IDLE) != RESET) 
 	{
 		
-			if((memcmp("$", usart3_recv, 1) == 0 ) && (usart3_recv[usart3_recv_cnt-2] == 0x0D) &&  (usart3_recv[usart2_recv_cnt-1] == 0x0A)) {
+			if((usart3_recv[0]==0xAA)&& (usart3_recv[usart3_recv_cnt-1] == 0xAA)) {
         usart3_recv_frame_flag = 1;
       }
 			Clear=USART3->SR;
 			Clear=USART3->DR;
-       usart3_recv_flag = 0;
+      usart3_recv_flag = 0;
 	}
 }
 

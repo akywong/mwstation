@@ -429,6 +429,11 @@
               <FileType>1</FileType>
               <FilePath>..\STM32_USER\stm32f10x_it.c</FilePath>
             </File>
+            <File>
+              <FileName>utils.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32_USER\utils.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -443,16 +448,6 @@
               <FileName>led.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\HARDWARE\LED\led.h</FilePath>
-            </File>
-            <File>
-              <FileName>beep.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HARDWARE\BEEP\beep.c</FilePath>
-            </File>
-            <File>
-              <FileName>beep.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\HARDWARE\BEEP\beep.h</FilePath>
             </File>
             <File>
               <FileName>usart.c</FileName>
@@ -518,11 +513,6 @@
               <FileName>bme_spi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\BME280\bme_spi.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_ads1256.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HARDWARE\ADS1256\bsp_ads1256.c</FilePath>
             </File>
             <File>
               <FileName>key.c</FileName>

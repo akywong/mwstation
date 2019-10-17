@@ -4,6 +4,8 @@
 #define WIND_INFO_UNVALID 0x01
 #define BME_SENSOR_UNVALID 0x02
 
+#define FT742_HT_TEMP  5
+
 struct fs_status{
 	FATFS fs;
 	FIL   fsrc;
@@ -37,17 +39,12 @@ struct wind_info{
 };
 
 struct sys_config{
-	uint32_t head;
-	uint32_t baud;
-	uint32_t year;
-	uint32_t month;
-	uint32_t date;
-	uint32_t hour;
-	uint32_t minute;
-	uint32_t second;
-	uint32_t freq;
-	uint32_t rsv[16];
-	uint32_t tail;
+	uint8_t head;
+	uint8_t type;
+	uint8_t freq;
+	uint8_t heat_flag;
+	uint8_t crc;
+	uint8_t tail;
 };
 
 extern uint8_t new_file_flag;

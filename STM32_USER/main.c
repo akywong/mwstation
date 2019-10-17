@@ -10,7 +10,6 @@
 #include "string.h"
 //#include "ff.h"
 #include "sdio_sdcard.h"
-#include "beep.h"
 #include "rtc.h"
 #include "timer.h"
 #include "key.h"
@@ -20,25 +19,18 @@
 #include "bsp_ads1256.h"
 #include "iwdg.h"
 #include "hyt939.h"
+#include "utils.h"
 #include "main.h"
+
 
 uint8_t new_file_flag = 0;
 uint32_t new_record_count = 0;
 
-uint8_t send_cmd[12] = {0x24,0x30,0x31,0x2C,0x57,0x56,0x3F,0x2A,0x2F,0x2F,0x0D,0x0A};//$01,WV?*//
+uint8_t send_cmd[12] = {0x24,0x30,0x31,0x2C,0x57,0x56,0x3F,0x2A,0x2F,0x2F,0x0D,0x0A};//$01,WV?*//<cr><lf>
+uint8_t send_htset_cmd[13] ={0x24,0x30,0x31,0x2C,0x48,0x54,0x39,0x39,0x2A,0x2F,0x2F,0x0D,0x0A};//$01,HT99*//<cr><lf>
+uint8_t send_htq_cmd[12]={0x24,0x30,0x31,0x2C,0x48,0x54,0x3F,0x2A,0x2F,0x2F,0x0D,0x0A};//$01,HT?*//<cr><lf>
 
-//
-struct sys_status status;
-struct sys_config config;
-struct wind_info  wind;
-struct fs_status cur;
-struct bme280_dev dev;
-struct bme280_data comp_data;
-
-//struct sys_config test_config;
-char *check_wind_info(char *str, int len);
-void record_file_write(void);
-void record_head(void);
+uint16_t record_interval[6]={1,1,10,60,600,3600};
 
 struct record_info{
 	double wind_speed;
@@ -52,6 +44,30 @@ struct record_info{
 };
 struct record_info record;
 struct record_info record_old;
+struct record_info record_last;
+
+//
+struct sys_status status;
+struct sys_config config_r,config_t;
+struct wind_info  wind;
+//struct fs_status cur;
+struct bme280_dev dev;
+struct bme280_data comp_data;
+
+//struct sys_config test_config;
+char *check_wind_info(char *str, int len);
+void record_file_write(void);
+//void record_head(void);
+uint32_t check_config(uint8_t *data);
+uint32_t check_cmd(uint8_t *data);
+uint8_t check_between(int min, int max, double data);
+uint8_t check_wind_speed(double speed);
+uint8_t check_wind_direction(double direction);
+uint8_t check_temperature(double temp);
+uint8_t check_pressure(double pressure);
+uint8_t check_humidity(double humidity);
+uint8_t check_record(struct record_info r);
+uint8_t pack_data(uint8_t *data,struct record_info r);
 
 #define CONFIG_GPIO     GPIOA
 #define CONFIG_PIN			GPIO_Pin_1
@@ -70,33 +86,62 @@ void config_gpio_init(void)
 
 int main(void)
 {
-	u8 t=0,r=0;
-	memset(&cur, 0, sizeof(struct fs_status));
+	//u8 t=0,r=0;
+	//memset(&cur, 0, sizeof(struct fs_status));
 	memset(&status, 0, sizeof(struct sys_status));
 	memset(&wind, 0,sizeof(struct wind_info));
 	memset(&record, 0, sizeof(record));
 	memset(&record_old, 0, sizeof(record_old));
+	memset(&record_old, 0, sizeof(record_last));
+	memset(&config_r,0,sizeof(config_r));
+	memset(&config_t,0,sizeof(config_t));
 	
 	delay_init();	    //延时函数初始化
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置中断优先级分组为组2：2位抢占优先级，2位响应优先级
 	TIM_SetInterval(1,2000);//1ms
 	LED_Init();
-	Beep_Init();
 	//Key_Init();
 	config_gpio_init();
 	AT24CXX_Init();
 	
 	USART1_Init(115200); //串口1初始化
 	USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+	USART2_Init(9600); //串口2初始化
+	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
+	USART3_Init(9600); //串口3初始化
+	USART_ITConfig(USART3, USART_IT_IDLE, ENABLE);
 	
-	LED_ON(LED1);
+	{
+		config_t.head = 0xAA;
+		config_t.tail = 0xAA;
+		config_t.type = 0x01;
+		config_t.freq = 0;
+		config_t.heat_flag = 0;
+		config_t.crc = CRC_calCrc8((const unsigned char *)(&config_t), sizeof(config_t)-2);
+		USART_SendBuf(USART3,(unsigned char*)&config_t,sizeof(config_t));
+	}
+	
 	while(AT24CXX_Check())
 	{
 		delay_ms(500);
-		LED_TOGGLE(LED1);
 		printf("EEPROM Check Failed!\r\n");
 	}
-	if(CONFIG_IO_GET_IN()) {
+	delay_ms(1000);
+	if(usart3_recv_frame_flag && check_config((uint8_t *)usart3_recv)){
+			memcpy(&config_r,usart3_recv,sizeof(config_r));
+			AT24CXX_Write(0,(u8*)&config_r,sizeof(config_r));
+	} else {
+			AT24CXX_Read(0,(u8*)&config_r,sizeof(config_r));
+			if(0 == check_config((uint8_t *)&config_r)) {
+				config_r.freq = 1;
+				config_r.head = 0xAA;
+				config_r.tail = 0xAA;
+				config_r.heat_flag = 0;
+				config_r.crc = CRC_calCrc8((const unsigned char *)(&config_r), sizeof(config_r)-2);
+			}
+	}
+	usart1_recv_frame_flag = 0;
+	/*if(CONFIG_IO_GET_IN()) {
 		while(1) {
 			if(usart1_recv_frame_flag) {
 				sscanf((char*)usart1_recv, "$%d,%d,%d,%d,%d:%d:%d,%d",&config.baud,
@@ -132,12 +177,12 @@ int main(void)
 			AT24CXX_Write(0,(u8*)&config,sizeof(config));
 		}
 		status.rtc_flag = 1;
-	}
-	printf("usart2 baud : %d\r\n",config.baud);
-	printf("freq : %d\r\n",config.freq);
-	LED_ON(LED1);
+	}*/
+	//printf("usart2 baud : %d\r\n",config.baud);
+	//printf("freq : %d\r\n",config.freq);
 	
-	while(RTC_Init(status.rtc_flag,config.year,config.month,config.date,config.hour,config.minute,config.second)) {
+	/*while(RTC_Init(status.rtc_flag,config.year,config.month,config.date,config.hour,config.minute,config.second)) {*/
+	while(RTC_Init(1,2019,1,1,0,0,0)) {
 		delay_ms(100);
 	}
 	
@@ -149,18 +194,13 @@ int main(void)
 	
 	//Start:
 	//开始初始化SD卡
-	while( SD_OK != SD_Init() ){
+	/*while( SD_OK != SD_Init() ){
 		delay_ms(30);
 		t++;
-		if(t%10==0){
-			BEEP_TOGGLE();
-			LED_TOGGLE(LED1);
-		}
 		if(t>30){
 			t=0;
 		}
 	}
-	BEEP_OFF();
 	cur.sd_cap = (u32)(SDCardInfo.CardCapacity/1024/1024);
 	
 	delay_ms(500);
@@ -169,15 +209,10 @@ int main(void)
 	while(FR_OK != f_mount(&cur.fs,"0:",1)){
 		delay_ms(30);
 		t++;
-		if(t%10==0){
-			BEEP_TOGGLE();
-			LED_TOGGLE(LED1);
-		}
 		if(t>30){
 			t=0;
 		}
 	}
-	BEEP_OFF();
 	
 	delay_ms(100);
 	
@@ -188,46 +223,38 @@ int main(void)
 	if(FR_OK != r){
 		//printf("\r\n创建文件失败 !\r\n");
 		//goto Start;
-		BEEP_ON();
 	}
 	//f_stat(cur.fpath, &cur.finfo);
 	//f_lseek(&cur.fsrc,cur.finfo.fsize);
 	f_lseek(&cur.fsrc,cur.fsrc.fsize);
 	cur.line_num = 0;
 	cur.file_flag = 1;
-	printf("usart2 baud : %d\r\n",config.baud);
-	printf("freq : %d\r\n",config.freq);
+	//printf("usart2 baud : %d\r\n",config.baud);
+	//printf("freq : %d\r\n",config.freq);
 	if(cur.fsrc.fsize == 0){
 		LED_ON(LED0);
 		record_head();
 		LED_OFF(LED0);
-	}
+	}*/
 	
-	USART2_Init(config.baud); //串口2初始化
-	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
-	
-	/*USART3_Init(config.baud); //串口2初始化
-	USART_ITConfig(USART3, USART_IT_IDLE, ENABLE);
-	if(status.cmd_send_flag ) {
+	/*if(status.cmd_send_flag ) {
 				USART_SendBuf(USART2,send_cmd,12);
         status.last_cmd_tick = tick_count;
     }*/
 	HYT939_Measure_Request();
-	//LED_ON(LED1);
 	//IWDG_Init_2s();
+	IO_OFF(WINDRE);
+	IO_ON(WINDDE);
 	while(1)
 	{
 		//IWDG_Feed();
-		if(new_file_flag == 1) {
+		/*if(new_file_flag == 1) {
 			f_close(&cur.fsrc);
 			new_file_flag = 0;
 			snprintf(cur.fpath,32,"%04d-%02d-%02d.txt",
 													calendar.w_year,calendar.w_month,calendar.w_date);
 			r=f_open(&cur.fsrc,cur.fpath,FA_OPEN_ALWAYS|FA_WRITE);
 			if(FR_OK != r){
-				BEEP_ON();
-			}else {
-				BEEP_OFF();
 			}
 			//f_stat(cur.fpath, &cur.finfo);
 			//f_lseek(&cur.fsrc,cur.finfo.fsize);
@@ -238,18 +265,33 @@ int main(void)
 			if(cur.fsrc.fsize == 0){
 				record_head();
 			}
-			LED_ON(LED1);
+		}*/
+		if(usart3_recv_frame_flag){
+			usart3_recv_frame_flag = 0;
+			if(check_config((uint8_t *)usart3_recv)){
+				memcpy(&config_r,usart3_recv,sizeof(config_r));
+				AT24CXX_Write(0,(u8*)&config_r,sizeof(config_r));
+			}else if(check_cmd((uint8_t *)usart3_recv)){
+				uint8_t uart_data[64];
+				if(pack_data(uart_data,record_last)){
+					USART_SendString(USART3,uart_data);
+				}
+			}
 		}
 		//记录风速计信息
 		if(usart2_recv_frame_flag) {
 				wind.info_str = check_wind_info((char*)usart2_recv, usart2_recv_cnt);
 				if(wind.info_str != NULL) {
 					sscanf(wind.info_str,"%f,%f,%c",&wind.speed, &wind.direction,&wind.status);
-					record.wind_speed += wind.speed;
-					record.wind_direction += wind.direction;
-					record.wind_count++;
-					wind.flag = 1;
-					status.last_wind_info = tick_count;
+					if(check_wind_speed(wind.speed) && check_wind_direction(wind.direction)) {
+						record.wind_speed += wind.speed;
+						record.wind_direction += wind.direction;
+						record_last.wind_speed = wind.speed;
+						record_last.wind_direction = wind.direction;
+						record.wind_count++;
+						wind.flag = 1;
+						status.last_wind_info = tick_count;
+					}
 				}
         usart2_recv_frame_flag = 0;
         usart2_recv_cnt = 0;
@@ -260,6 +302,7 @@ int main(void)
 				if((tick_count - status.last_cmd_tick) > 400){
 					USART_SendBuf(USART2,send_cmd,12);
           status.last_cmd_tick = tick_count;
+					delay_ms(15);
         }
 			} 
     }
@@ -269,8 +312,11 @@ int main(void)
 			if(BME280_OK == bme280_get_sensor_data(BME280_ALL, &comp_data, &dev)){
 				//record.humidity += comp_data.humidity;
 				//record.temperature += comp_data.temperature;
-				record.pressure += comp_data.pressure;
-				record.press_count++;
+				if(check_pressure(comp_data.pressure)) {
+					record.pressure += comp_data.pressure;
+					record_last.pressure = comp_data.pressure;
+					record.press_count++;
+				}
 			}
 		}
 		
@@ -278,14 +324,18 @@ int main(void)
 		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
 			status.last_sensor = tick_count;
 			if(0==HYT939_Data_Fetch(&comp_data.humidity,&comp_data.temperature)) {
-				record.humidity += comp_data.humidity;
-				record.temperature += comp_data.temperature;
-				record.sensor_count++;
+				if(check_humidity(comp_data.humidity) && check_temperature(comp_data.temperature)) {
+					record.humidity += comp_data.humidity;
+					record.temperature += comp_data.temperature;
+					record_last.humidity = comp_data.humidity;
+					record_last.temperature = comp_data.temperature;
+					record.sensor_count++;
+				}
 			}
 			HYT939_Measure_Request();
 		}
 		//写文件
-		if(((new_record_count - status.last_record_tick) >= config.freq) || (new_record_count < status.last_record_tick)){
+		if(((new_record_count - status.last_record_tick) >= record_interval[config_r.freq]) || (new_record_count < status.last_record_tick)){
 			LED_ON(LED0);
 			status.last_record_tick = new_record_count;
 			record_file_write();
@@ -331,14 +381,35 @@ char *check_wind_info(char *str, int len)
     
     return (str+equal_sign+1);
 }
-
+void pack_ht_data(void *buf,uint8_t flag)
+{
+	uint8_t temp=99;
+	//uint8_t xor_value = 0;
+	uint8_t *data=(uint8_t*)buf;
+	//int i;
+	if(flag!=0) {
+		temp = FT742_HT_TEMP;
+	}else{
+		temp = 99;
+	}
+	data[6] = 0x30+temp/10;
+	data[7] = 0x30+temp%10;
+	
+	/*for(i=1;i<8;i++) {
+		xor_value ^= data[i];
+  }
+	
+	data[9] = 0x30+xor_value/16;
+	data[10] = 0x30+xor_value%16;*/
+}
 void record_file_write(void)
 {
 	//uint8_t valid_flag = 0;
-	UINT count;
-	u8 ret;
+	//UINT count;
+	//u8 ret;
 	int len;
 	char prefix[128]={0};
+	uint8_t uart_data[64]={0};
 	
 	if(record.press_count !=0 ){
 		//record.humidity /= ((double)record.sensor_count);
@@ -361,16 +432,15 @@ void record_file_write(void)
 		/*record.wind_speed = record_old.wind_speed;
 		record.wind_direction = record_old.wind_direction;*/
 	}
-	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%5d,%6.2f,%6.2f,%7.2f,%6.2f,%7.2f",
+	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%6.2f,%6.2f,%7.2f,%6.2f,%7.2f",
 											calendar.w_year,calendar.w_month,calendar.w_date,calendar.hour,calendar.min,calendar.sec,
-											cur.line_num,record.wind_speed,record.wind_direction,
+											record.wind_speed,record.wind_direction,
 											record.temperature, record.humidity, record.pressure/100.0
 											);
 	
 	prefix[len] = 0x0d;
 	prefix[len+1] = 0x0a;
-	ret = f_write(&cur.fsrc,prefix,len+2,&count);
-		//LED_TOGGLE(LED1);
+	/*ret = f_write(&cur.fsrc,prefix,len+2,&count);
 		if(FR_OK != ret) {
 			cur.file_flag = 0;
 			cur.line_num = 0;
@@ -379,12 +449,13 @@ void record_file_write(void)
 		} else {
 			cur.line_num++;
 			f_sync(&cur.fsrc);
-		}
-		/*if((cur.line_num * config.freq) > 10) {
-			f_sync(&cur.fsrc);
 		}*/
+
 		//memcpy(&record_old, &record, sizeof(struct record_info));
 		USART_SendString(USART1,(unsigned char *)prefix);
+		if(pack_data(uart_data,record)){
+			USART_SendString(USART3,uart_data);
+		}
 		//USART_SendString(USART2,(unsigned char *)prefix);
 		//USART_SendString(USART3,(unsigned char *)prefix);
 		record_old.humidity = record.humidity;
@@ -395,7 +466,7 @@ void record_file_write(void)
 		memset(&record, 0, sizeof(record));
 }
 
-void record_head(void)
+/*void record_head(void)
 {
 	int len;
 	char str[256];
@@ -422,22 +493,90 @@ void record_head(void)
 		cur.file_flag = 0;
 		cur.line_num = 0;
 		f_close(&cur.fsrc);
-		LED_OFF(LED1);
 		return;
 	} else {
 		//cur.line_num++;
 		f_sync(&cur.fsrc);
 	}
+}*/
+
+uint32_t check_config(uint8_t *data)
+{
+	uint8_t crc=0;
+	struct sys_config temp_config;
+	memcpy(&temp_config,data,sizeof(temp_config));
+	crc = CRC_calCrc8((const unsigned char *)&temp_config, sizeof(temp_config)-2);
+	if((0x11==temp_config.type) && (crc == temp_config.crc) && (0xAA==temp_config.head) &&(0xAA==temp_config.tail)) {
+		return 1;
+	}else{
+		return 0;
+	}
+}
+uint32_t check_cmd(uint8_t *data)
+{
+	uint8_t crc = 0;
+	crc = CRC_calCrc8((const unsigned char *)data, 2);
+	if((data[0]==0xAA)&&(data[1]==0x12)&&(crc==data[2])&&(data[3]==0xAA)){
+		return 1;
+	}else{
+		return 0;
+	}
 }
 
-/*void get_ADC_value(void)
+uint8_t pack_data(uint8_t *data,struct record_info r)
 {
-	int32_t adc[ADC_CHAN_NUM];
-	int i;
-	
-	for(i=0; i<ADC_CHAN_NUM; i++)
-	{
-		adc[i] = ADS1256_GetAdc(i);
-		ADC_value[i] = ((double)adc[i] * 2500000.0) / 4194303.0;
+	if(check_record(r)){
+		data[0]=0xAA;
+		data[1]=0x02;
+		memcpy(data+2,&(r.temperature),4);
+		memcpy(data+6,&(r.humidity),4);
+		memcpy(data+10,&(r.pressure),4);
+		memcpy(data+14,&(r.wind_speed),4);
+		memcpy(data+18,&(r.wind_direction),4);
+		data[22] = CRC_calCrc8((const unsigned char *)data, 22);
+		data[23]=0xAA;
+		return 1;
 	}
-}*/
+	return 0;
+}
+uint8_t check_between(int min, int max, double data)
+{
+	if((data>=min) && (data<=max)){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+//检测风速
+uint8_t check_wind_speed(double speed)
+{
+	return check_between(0,75,speed);
+}
+//
+uint8_t check_wind_direction(double direction)
+{
+	return check_between(0,360,direction);
+}
+//
+uint8_t check_temperature(double temp)
+{
+	return check_between(-40,80,temp);
+}
+//
+uint8_t check_pressure(double pressure)
+{
+	return check_between(330,1100,pressure);
+}
+//
+uint8_t check_humidity(double humidity)
+{
+	return check_between(0,100,humidity);
+}
+uint8_t check_record(struct record_info r)
+{
+	if(check_wind_speed(r.wind_speed) && check_wind_direction(r.wind_direction) && check_pressure(r.pressure) && check_humidity(r.humidity)&&check_temperature(r.temperature)){
+		return 1;
+	}else{
+		return 0;
+	}
+}

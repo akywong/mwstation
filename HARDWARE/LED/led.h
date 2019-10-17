@@ -3,19 +3,14 @@
 
 #include "sys.h"
 
-/***********************************************************************/
-//LED驱动程序(通用易移植版)
-//此程序适用于七彩光子太极M3—STM32F103开发板及部分兼容的STM32系统，
-//只供学习使用，未经作者许可，不得用于其它任何用途！
-/***********************************************************************/	 
-
-
-
-
 /***************** LED操作函数宏定义(低电平点亮) *********************/
 #define LED_ON(x)      x=0    //打开LED
 #define LED_OFF(x)     x=1    //关闭LED
 #define LED_TOGGLE(x)  x^=1   //翻转LED
+
+#define  IO_ON(x)      x=1
+#define  IO_OFF(x)     x=0
+#define  IO_TOGGLE(x)  x^=1
 /****************************** end *********************************/
 
 
@@ -29,12 +24,19 @@
 /********************* LED所在GPIO口宏定义 ***************************/
 #define LED0_GPIO  GPIOB
 #define LED1_GPIO  GPIOE
+#define WINDRE_GPIO GPIOB
+#define WINDDE_GPIO GPIOB
 
 #define LED0_PIN   GPIO_Pin_5
 #define LED1_PIN   GPIO_Pin_5
+#define WINDRE_PIN GPIO_Pin_2
+#define WINDDE_PIN GPIO_Pin_1
 
 #define LED0 PBout(5)// PB5
-#define LED1 PEout(5)// PE5	
+#define LED1 PEout(5)// PE5
+#define WINDRE PBout(2)
+#define WINDDE PBout(1)
+
 
 #define LED_GREEN    LED0   //绿色
 #define LED_BLUE     LED1   //蓝色

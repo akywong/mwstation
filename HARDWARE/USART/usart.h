@@ -17,6 +17,11 @@ extern uint32_t usart2_recv_cnt;
 extern uint8_t usart2_recv_frame_flag;
 extern uint8_t usart2_recv_flag;
 
+extern uint8_t usart3_recv[USART_FRAME_MAX_SIZE];
+extern uint32_t usart3_recv_cnt;
+extern uint8_t usart3_recv_frame_flag;
+extern uint8_t usart3_recv_flag;
+
 
 void USART1_Init(u32 bound);//串口1初始化函数
 void USART2_Init(u32 bound);//串口2初始化函数

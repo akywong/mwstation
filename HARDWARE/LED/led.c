@@ -28,8 +28,16 @@ void LED_Init(void)
  GPIO_Init(LED0_GPIO, &GPIO_InitStructure);					   //根据设定参数初始化LED0
  GPIO_SetBits(LED0_GPIO,LED0_PIN);						         //LED0输出高
 
- GPIO_InitStructure.GPIO_Pin = LED1_PIN;	    		     //LED1端口配置, 推挽输出
+ /*GPIO_InitStructure.GPIO_Pin = LED1_PIN;	    		     //LED1端口配置, 推挽输出
  GPIO_Init(LED1_GPIO, &GPIO_InitStructure);	  				 //推挽输出 ，IO口速度为50MHz
- GPIO_SetBits(LED1_GPIO,LED1_PIN); 						         //LED1输出高 
+ GPIO_SetBits(LED1_GPIO,LED1_PIN);*/ 						         //LED1输出高 
+	
+	GPIO_InitStructure.GPIO_Pin = WINDRE_PIN;
+	GPIO_Init(WINDRE_GPIO, &GPIO_InitStructure);
+	GPIO_SetBits(WINDRE_GPIO,WINDRE_PIN);
+	
+	GPIO_InitStructure.GPIO_Pin = WINDDE_PIN;
+	GPIO_Init(WINDDE_GPIO, &GPIO_InitStructure);
+	GPIO_SetBits(WINDDE_GPIO,WINDDE_PIN);
 }
  
