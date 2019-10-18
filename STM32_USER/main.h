@@ -21,6 +21,7 @@ struct sys_status{
 		uint32_t sys_config_flag;
 		uint32_t last_record_tick;
     uint32_t last_cmd_tick;
+		uint32_t last_ht_cmd_tick;
 		uint32_t last_wind_info;
 		uint32_t last_sensor;//ÎÂÊª¶È¼Æ
     uint32_t last_press;
@@ -28,14 +29,17 @@ struct sys_status{
     uint8_t lora_send_flag;
 		uint8_t stop_feed_flag;
 		uint8_t rtc_flag;
+		uint8_t ht_exp;
 };
 
 struct wind_info{
 	char  *info_str;
 	float speed;
 	float direction;
-	char status;
-	uint8_t flag;
+	int   ht;
+	//char status;
+	int status;
+	uint8_t ht_flag;
 };
 
 struct sys_config{
