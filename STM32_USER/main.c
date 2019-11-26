@@ -41,6 +41,7 @@ struct record_info{
 	uint32_t sensor_count;
 	float pressure;
 	uint32_t press_count;
+	u8 flag;
 };
 struct record_info record;
 struct record_info record_old;
@@ -437,6 +438,7 @@ void record_file_write(void)
 		//record.humidity /= ((float)record.sensor_count);
 		//record.temperature /= ((float)record.sensor_count);
 		record.pressure /= ((float)record.press_count);
+		record.flag |= 1<<2;
 	}else{
 		/*record.humidity = record_old.humidity;
 		record.temperature = record_old.temperature;
@@ -446,10 +448,12 @@ void record_file_write(void)
 		record.humidity /= ((float)record.sensor_count);
 		record.temperature /= ((float)record.sensor_count);
 		//record.pressure /= ((float)record.sensor_count);
+		record.flag |= 3;
 	}
 	if(record.wind_count != 0) {
 		record.wind_speed /= ((float)record.wind_count);
 		record.wind_direction /= ((float)record.wind_count);
+		record.flag |= 3<<3;
 	}else{
 		/*record.wind_speed = record_old.wind_speed;
 		record.wind_direction = record_old.wind_direction;*/
@@ -525,7 +529,7 @@ uint32_t check_config(uint8_t *data)
 	uint8_t crc=0;
 	struct sys_config temp_config;
 	memcpy(&temp_config,data,sizeof(temp_config));
-	crc = CRC_calCrc8((const unsigned char *)data+1, sizeof(temp_config)-2);
+	crc = CRC_calCrc8((const unsigned char *)data, sizeof(temp_config)-2);
 	if((0x11==temp_config.type) && (crc == temp_config.crc) && (0xAA==temp_config.head) &&(0xAA==temp_config.tail)) {
 		return 1;
 	}else{
@@ -535,7 +539,7 @@ uint32_t check_config(uint8_t *data)
 uint32_t check_cmd(uint8_t *data)
 {
 	uint8_t crc = 0;
-	crc = CRC_calCrc8((const unsigned char *)data+1, 2);
+	crc = CRC_calCrc8((const unsigned char *)data, 3);
 	if((data[0]==0xAA)&&(data[1]==0x12)&&(crc==data[2])&&(data[3]==0xAA)){
 		return 1;
 	}else{
@@ -555,8 +559,8 @@ uint8_t pack_data(uint8_t *data,struct record_info r)
 		memcpy(data+10,&(r.pressure),4);
 		memcpy(data+14,&(r.wind_speed),4);
 		memcpy(data+18,&(r.wind_direction),4);
-		data[22] = flag;
-		data[23] = CRC_calCrc8((const unsigned char *)data+1, 22);
+		data[22] = flag&record.flag;
+		data[23] = CRC_calCrc8((const unsigned char *)data, 23);
 		data[24]=0xAA;
 		return 1;
 	}
