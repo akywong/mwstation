@@ -8,11 +8,11 @@
 #include "led.h"
 //#include "w25qxx.h"
 #include "string.h"
-//#include "ff.h"
+#include "ff.h"
 #include "sdio_sdcard.h"
 #include "rtc.h"
 #include "timer.h"
-#include "key.h"
+//#include "key.h"
 #include "24cxx.h"
 //#include "adc.h"
 #include "bme280.h"
@@ -51,14 +51,14 @@ struct record_info record_last;
 struct sys_status status;
 struct sys_config config_r,config_t;
 struct wind_info  wind;
-//struct fs_status cur;
+struct fs_status cur;
 struct bme280_dev dev;
 struct bme280_data comp_data;
 
 //struct sys_config test_config;
 char *check_wind_info(char *str, int len);
 void record_file_write(void);
-//void record_head(void);
+void record_head(void);
 uint32_t check_config(uint8_t *data);
 uint32_t check_cmd(uint8_t *data);
 uint8_t check_between(int min, int max, float data);
@@ -88,8 +88,8 @@ void config_gpio_init(void)
 
 int main(void)
 {
-	//u8 t=0,r=0;
-	//memset(&cur, 0, sizeof(struct fs_status));
+	u8 t=0,r=0;
+	memset(&cur, 0, sizeof(struct fs_status));
 	memset(&status, 0, sizeof(struct sys_status));
 	memset(&wind, 0,sizeof(struct wind_info));
 	memset(&record, 0, sizeof(record));
@@ -183,7 +183,7 @@ int main(void)
 	//printf("freq : %d\r\n",config.freq);
 	
 	/*while(RTC_Init(status.rtc_flag,config.year,config.month,config.date,config.hour,config.minute,config.second)) {*/
-	while(RTC_Init(1,2019,1,1,0,0,0)) {
+	while(RTC_Init(1,2020,1,1,0,0,0)) {
 		delay_ms(100);
 	}
 	
@@ -196,7 +196,7 @@ int main(void)
 	
 	//Start:
 	//开始初始化SD卡
-	/*while( SD_OK != SD_Init() ){
+	while( SD_OK != SD_Init() ){
 		delay_ms(30);
 		t++;
 		if(t>30){
@@ -237,7 +237,7 @@ int main(void)
 		LED_ON(LED0);
 		record_head();
 		LED_OFF(LED0);
-	}*/
+	}
 	
 	USART2_Init(9600); //串口2初始化
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
@@ -251,7 +251,7 @@ int main(void)
 	while(1)
 	{
 		//IWDG_Feed();
-		/*if(new_file_flag == 1) {
+		if(new_file_flag == 1) {
 			f_close(&cur.fsrc);
 			new_file_flag = 0;
 			snprintf(cur.fpath,32,"%04d-%02d-%02d.txt",
@@ -268,7 +268,7 @@ int main(void)
 			if(cur.fsrc.fsize == 0){
 				record_head();
 			}
-		}*/
+		}
 		if(usart3_recv_frame_flag){
 			usart3_recv_frame_flag = 0;
 			if(check_config((uint8_t *)usart3_recv)){
@@ -428,8 +428,8 @@ void pack_ht_data(void *buf,uint8_t flag)
 void record_file_write(void)
 {
 	//uint8_t valid_flag = 0;
-	//UINT count;
-	//u8 ret;
+	UINT count;
+	u8 ret;
 	int len;
 	char prefix[128]={0};
 	uint8_t uart_data[64]={0};
@@ -466,7 +466,7 @@ void record_file_write(void)
 	
 	prefix[len] = 0x0d;
 	prefix[len+1] = 0x0a;
-	/*ret = f_write(&cur.fsrc,prefix,len+2,&count);
+	ret = f_write(&cur.fsrc,prefix,len+2,&count);
 		if(FR_OK != ret) {
 			cur.file_flag = 0;
 			cur.line_num = 0;
@@ -475,7 +475,7 @@ void record_file_write(void)
 		} else {
 			cur.line_num++;
 			f_sync(&cur.fsrc);
-		}*/
+		}
 
 		//memcpy(&record_old, &record, sizeof(struct record_info));
 		USART_SendString(USART1,(unsigned char *)prefix);
@@ -490,7 +490,7 @@ void record_file_write(void)
 		memset(&record, 0, sizeof(record));
 }
 
-/*void record_head(void)
+void record_head(void)
 {
 	int len;
 	char str[256];
@@ -522,7 +522,7 @@ void record_file_write(void)
 		//cur.line_num++;
 		f_sync(&cur.fsrc);
 	}
-}*/
+}
 
 uint32_t check_config(uint8_t *data)
 {
