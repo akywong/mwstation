@@ -15,7 +15,7 @@
 //#include "key.h"
 #include "24cxx.h"
 //#include "adc.h"
-#include "bme280.h"
+//#include "lps22hb.h"
 #include "bsp_ads1256.h"
 #include "iwdg.h"
 #include "hyt939.h"
@@ -52,8 +52,10 @@ struct sys_status status;
 struct sys_config config_r,config_t;
 struct wind_info  wind;
 struct fs_status cur;
-struct bme280_dev dev;
-struct bme280_data comp_data;
+//struct bme280_dev dev;
+//struct bme280_data comp_data;
+double temperature;
+double humidity;
 
 //struct sys_config test_config;
 char *check_wind_info(char *str, int len);
@@ -188,7 +190,7 @@ int main(void)
 	}
 	
 	
-	bme280_init(&dev);
+	//lps22hb_init(&dev);
 	
 	HYT939_Measure_Request();
 	
@@ -330,28 +332,26 @@ int main(void)
       }
     }
 		//记录气压计信息
-		if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
+		/*if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
 			status.last_press = tick_count;
-			if(BME280_OK == bme280_get_sensor_data(BME280_ALL, &comp_data, &dev)){
-				//record.humidity += comp_data.humidity;
-				//record.temperature += comp_data.temperature;
+			if(LPS22HB_OK == bme280_get_sensor_data(LPS22HB_ALL, &comp_data, &dev)){
 				if(check_pressure(comp_data.pressure)) {
 					record.pressure += comp_data.pressure;
 					record_last.pressure = comp_data.pressure;
 					record.press_count++;
 				}
 			}
-		}
+		}*/
 		
 		//记录温湿度计信息
 		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
 			status.last_sensor = tick_count;
-			if(0==HYT939_Data_Fetch(&comp_data.humidity,&comp_data.temperature)) {
-				if(check_humidity(comp_data.humidity) && check_temperature(comp_data.temperature)) {
-					record.humidity += comp_data.humidity;
-					record.temperature += comp_data.temperature;
-					record_last.humidity = comp_data.humidity;
-					record_last.temperature = comp_data.temperature;
+			if(0==HYT939_Data_Fetch(&humidity,&temperature)) {
+				if(check_humidity(humidity) && check_temperature(temperature)) {
+					record.humidity += humidity;
+					record.temperature += temperature;
+					record_last.humidity = humidity;
+					record_last.temperature = temperature;
 					record.sensor_count++;
 				}
 			}
