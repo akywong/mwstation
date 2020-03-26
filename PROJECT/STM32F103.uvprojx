@@ -15,7 +15,7 @@
         <TargetCommonOption>
           <Device>STM32F103RE</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <PackID>Keil.STM32F1xx_DFP.2.2.0</PackID>
+          <PackID>Keil.STM32F1xx_DFP.1.1.0</PackID>
           <PackURL>http://www.keil.com/pack/</PackURL>
           <Cpu>IROM(0x08000000,0x80000) IRAM(0x20000000,0x10000) CPUTYPE("Cortex-M3") CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -373,7 +373,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\STM32_USER;..\CORE;..\STM32F10x_FWLib\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\IIC;..\HARDWARE\SPI;..\HARDWARE\LED;..\HARDWARE\SDIO;..\HARDWARE\BEEP;..\HARDWARE\USART;..\HARDWARE\IO_SPI;..\HARDWARE\W25QXX;..\MODULES\FATFS;..\MODULES\FATFS\src;..\MODULES\FATFS\src\option;..\HARDWARE\RTX;..\HARDWARE\RTC;..\HARDWARE\TIMER;..\HARDWARE\ADC;..\HARDWARE\SPI;..\HARDWARE\BME280;..\HARDWARE\ADS1256;..\HARDWARE\KEY;..\HARDWARE\24CXX;..\HARDWARE\IO_IIC;..\HARDWARE\IWDG;..\HARDWARE\HYT939</IncludePath>
+              <IncludePath>..\STM32_USER;..\CORE;..\STM32F10x_FWLib\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\IIC;..\HARDWARE\SPI;..\HARDWARE\LED;..\HARDWARE\SDIO;..\HARDWARE\BEEP;..\HARDWARE\USART;..\HARDWARE\IO_SPI;..\HARDWARE\W25QXX;..\MODULES\FATFS;..\MODULES\FATFS\src;..\MODULES\FATFS\src\option;..\HARDWARE\RTX;..\HARDWARE\RTC;..\HARDWARE\TIMER;..\HARDWARE\ADC;..\HARDWARE\SPI;..\HARDWARE\BME280;..\HARDWARE\ADS1256;..\HARDWARE\KEY;..\HARDWARE\24CXX;..\HARDWARE\IO_IIC;..\HARDWARE\IWDG;..\HARDWARE\HYT939;..\HARDWARE\LPS22HB</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -505,16 +505,6 @@
               <FilePath>..\HARDWARE\TIMER\timer.c</FilePath>
             </File>
             <File>
-              <FileName>bme280.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HARDWARE\BME280\bme280.c</FilePath>
-            </File>
-            <File>
-              <FileName>bme_spi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HARDWARE\BME280\bme_spi.c</FilePath>
-            </File>
-            <File>
               <FileName>key.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\KEY\key.c</FilePath>
@@ -533,6 +523,21 @@
               <FileName>iwdg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\IWDG\iwdg.c</FilePath>
+            </File>
+            <File>
+              <FileName>lps22hb_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\LPS22HB\lps22hb_spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>lps22hb_reg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\LPS22HB\lps22hb_reg.c</FilePath>
+            </File>
+            <File>
+              <FileName>lps22hb.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\LPS22HB\lps22hb.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -12,10 +12,11 @@
 #include "sdio_sdcard.h"
 #include "rtc.h"
 #include "timer.h"
+#include "spi.h"
 //#include "key.h"
 #include "24cxx.h"
 //#include "adc.h"
-//#include "lps22hb.h"
+#include "lps22hb.h"
 #include "bsp_ads1256.h"
 #include "iwdg.h"
 #include "hyt939.h"
@@ -54,6 +55,7 @@ struct wind_info  wind;
 struct fs_status cur;
 //struct bme280_dev dev;
 //struct bme280_data comp_data;
+float pressure;
 double temperature;
 double humidity;
 
@@ -105,8 +107,13 @@ int main(void)
 	TIM_SetInterval(1,2000);//1ms
 	LED_Init();
 	//Key_Init();
+	SPI1_Init();
 	config_gpio_init();
 	AT24CXX_Init();
+	
+	if(lps22hb_init()){
+		LED_ON(LED1);
+	}
 	
 	USART1_Init(115200); //串口1初始化
 	USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
@@ -332,16 +339,16 @@ int main(void)
       }
     }
 		//记录气压计信息
-		/*if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
+		if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
 			status.last_press = tick_count;
-			if(LPS22HB_OK == bme280_get_sensor_data(LPS22HB_ALL, &comp_data, &dev)){
-				if(check_pressure(comp_data.pressure)) {
-					record.pressure += comp_data.pressure;
-					record_last.pressure = comp_data.pressure;
+			if(0 == lps22hb_get_pressure(&pressure)){
+				if(check_pressure(pressure)) {
+					record.pressure += pressure;
+					record_last.pressure = pressure;
 					record.press_count++;
 				}
 			}
-		}*/
+		}
 		
 		//记录温湿度计信息
 		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
