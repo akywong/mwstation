@@ -4,7 +4,7 @@
 #include "spi.h"
 
 /////Ó²¼þSPI
-#define lps22hb_spi_init()         SPI1_SetMode(1,0)
+#define lps22hb_spi_init()         SPI1_SetMode(SPI_CPOL_High,SPI_CPHA_1Edge)
 #define lps22hb_cs_h()             SPI1_CS_H()
 #define lps22hb_cs_l()             SPI1_CS_L()
 #define lps22hb_spi_rw_byte(x)     SPI1_ReadWriteByte(x)

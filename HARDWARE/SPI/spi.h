@@ -11,6 +11,9 @@
 #define SPI1_CS_H() GPIOA->BSRR=GPIO_Pin_4
 #define SPI1_CS_L() GPIOA->BRR =GPIO_Pin_4
 
+#define SPI1_ADS1220_CS_H() GPIOC->BSRR=GPIO_Pin_0
+#define SPI1_ADS1220_CS_L() GPIOC->BRR =GPIO_Pin_0
+
 
 #define SPI2_CS_H() GPIOB->BSRR=GPIO_Pin_12
 #define SPI2_CS_L() GPIOB->BRR =GPIO_Pin_12

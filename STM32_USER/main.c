@@ -20,8 +20,17 @@
 #include "bsp_ads1256.h"
 #include "iwdg.h"
 #include "hyt939.h"
+#include "ADS1220.h"
 #include "utils.h"
 #include "main.h"
+
+float Rref = 3240.0;
+float FlashGainCorrection;
+
+float DacErrorCorrection = 0.99945;
+float MeasuredGainCodeValue = 7868944.1883;
+unsigned char StartConversion;
+unsigned char ReadConversionData = 0;
 
 
 uint8_t new_file_flag = 0;
@@ -59,6 +68,8 @@ float pressure;
 double temperature;
 double humidity;
 
+float ads1220_temperature;
+
 //struct sys_config test_config;
 char *check_wind_info(char *str, int len);
 void record_file_write(void);
@@ -93,6 +104,11 @@ void config_gpio_init(void)
 int main(void)
 {
 	u8 t=0,r=0;
+	
+	
+	volatile static unsigned char tempData[3];
+	unsigned char calibrateCount = 0;
+	
 	memset(&cur, 0, sizeof(struct fs_status));
 	memset(&status, 0, sizeof(struct sys_status));
 	memset(&wind, 0,sizeof(struct wind_info));
@@ -110,6 +126,15 @@ int main(void)
 	SPI1_Init();
 	config_gpio_init();
 	AT24CXX_Init();
+	
+	// Reset the ADS1220
+    ADS1220_Reset();
+
+    // Determine the ADS1220 Calibration offset - Short the AIN0 and AIN1 together and measure the results 4 times.
+    // The average result will be subtracted from all future measurements.
+    Setup_ADS1220 (ADS1220_MUX_SHORTED, ADS1220_OP_MODE_NORMAL,
+                   ADS1220_CONVERSION_SINGLE_SHOT, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_16, ADS1220_USE_PGA,
+                   ADS1220_IDAC1_AIN3, ADS1220_IDAC2_AIN2, ADS1220_IDAC_CURRENT_250_UA);
 	
 	if(lps22hb_init()){
 		LED_ON(LED1);
@@ -248,6 +273,33 @@ int main(void)
 		LED_OFF(LED0);
 	}
 	
+		ReadConversionData = 0;
+    ADS1220_Start ();             // Kick off conversion
+
+    // Gather and average 8 readings from the ADS1220
+    while (calibrateCount < 8)
+    {
+        while (!ReadConversionData);   // Wait for Data Ready interrupt
+        ReadConversionData = 0;
+        ADS1220_Get_Conversion_Data ((unsigned char *)tempData);   // Get the raw data
+        ADS1220_Offset_Calibrate_Data ((unsigned char *)tempData);        // Send results to calibration function
+        calibrateCount++;
+
+        // Start next calibration reading?
+        if (calibrateCount < 8)
+            ADS1220_Start ();
+    }
+	
+		// Configure ADS1220 for actual measurements
+    Setup_ADS1220 (ADS1220_MUX_AIN0_AIN1, ADS1220_OP_MODE_NORMAL,
+                   ADS1220_CONVERSION_CONTINUOUS, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_16, ADS1220_USE_PGA,
+                   ADS1220_IDAC1_AIN3, ADS1220_IDAC2_AIN2, ADS1220_IDAC_CURRENT_250_UA);
+	
+		delay_ms(50);
+    StartConversion = 0;
+    ReadConversionData = 0;
+    ADS1220_Start ();      // Only one start needed for Continuous Mode
+	
 	USART2_Init(9600); //串口2初始化
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
 	HYT939_Measure_Request();
@@ -364,6 +416,8 @@ int main(void)
 			}
 			HYT939_Measure_Request();
 		}
+		
+		ads1220_temperature = ADS1220_Get_Temperature();
 		//写文件
 		if(((new_record_count - status.last_record_tick) >= record_interval[config_r.freq]) || (new_record_count < status.last_record_tick)){
 			LED_ON(LED0);
