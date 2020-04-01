@@ -123,8 +123,8 @@ int main(void)
 	TIM_SetInterval(1,2000);//1ms
 	LED_Init();
 	//Key_Init();
-	SPI1_Init();
 	config_gpio_init();
+	SPI1_Init();
 	AT24CXX_Init();
 	
 	// Reset the ADS1220
@@ -134,7 +134,7 @@ int main(void)
     // The average result will be subtracted from all future measurements.
     Setup_ADS1220 (ADS1220_MUX_SHORTED, ADS1220_OP_MODE_NORMAL,
                    ADS1220_CONVERSION_SINGLE_SHOT, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_16, ADS1220_USE_PGA,
-                   ADS1220_IDAC1_AIN3, ADS1220_IDAC2_AIN2, ADS1220_IDAC_CURRENT_250_UA);
+                   ADS1220_IDAC1_AIN3, ADS1220_IDAC2_AIN2, ADS1220_IDAC_CURRENT_250_UA);//ADS1220_IDAC2_DISABLED
 	
 	if(lps22hb_init()){
 		LED_ON(LED1);
@@ -293,7 +293,7 @@ int main(void)
 		// Configure ADS1220 for actual measurements
     Setup_ADS1220 (ADS1220_MUX_AIN0_AIN1, ADS1220_OP_MODE_NORMAL,
                    ADS1220_CONVERSION_CONTINUOUS, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_16, ADS1220_USE_PGA,
-                   ADS1220_IDAC1_AIN3, ADS1220_IDAC2_AIN2, ADS1220_IDAC_CURRENT_250_UA);
+                   ADS1220_IDAC1_AIN3, ADS1220_IDAC2_AIN2, ADS1220_IDAC_CURRENT_250_UA);//ADS1220_IDAC2_DISABLED
 	
 		delay_ms(50);
     StartConversion = 0;

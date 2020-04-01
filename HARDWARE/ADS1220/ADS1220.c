@@ -96,6 +96,7 @@ void Setup_ADS1220 (unsigned char inputMux, unsigned char opMode,
                     unsigned char routeIDAC1, unsigned char routeIDAC2, unsigned char idacCurrent)
 {
 unsigned char config[4];
+	unsigned char value[5]={0};
 
     config[0] = inputMux + gainLevel + pgaBypass;
     config[1] = dataRate + opMode + conversionMode + ADS1220_TEMP_SENSOR_OFF + ADS1220_BURN_OUT_CURRENT_OFF;
@@ -131,6 +132,8 @@ unsigned char config[4];
 
     }
     ADS1220_Write_Regs (config, ADS1220_CONFIG_0_REG, 4);
+		
+		ADS1220_Read_Regs (value, ADS1220_CONFIG_0_REG, 4);
 }
 
 float ADS1220_Get_Temperature(void)

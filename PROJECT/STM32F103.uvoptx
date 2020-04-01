@@ -172,7 +172,24 @@
           <Name>UL2CM3(-S0 -C0 -P0 ) -FN1 -FC1000 -FD20000000 -FF0STM32F10x_512 -FL080000 -FS08000000 -FP0($$Device:STM32F103RE$Flash\STM32F10x_512.FLM)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint/>
+      <Breakpoint>
+        <Bp>
+          <Number>0</Number>
+          <Type>0</Type>
+          <LineNumber>145</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134222936</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\HARDWARE\ADS1220\ADS1220.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\STM32F103\../HARDWARE/ADS1220/ADS1220.c\145</Expression>
+        </Bp>
+      </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
@@ -198,6 +215,11 @@
           <count>4</count>
           <WinNumber>1</WinNumber>
           <ItemText>test_config</ItemText>
+        </Ww>
+        <Ww>
+          <count>5</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>data</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
@@ -543,7 +565,7 @@
       <GroupNumber>3</GroupNumber>
       <FileNumber>24</FileNumber>
       <FileType>1</FileType>
-      <tvExp>1</tvExp>
+      <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>..\HARDWARE\ADS1220\RTD_Math_1.c</PathWithFileName>
