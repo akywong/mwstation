@@ -21,6 +21,7 @@
 #include "iwdg.h"
 #include "hyt939.h"
 #include "ADS1220.h"
+#include "io.h"
 #include "utils.h"
 #include "main.h"
 
@@ -30,7 +31,6 @@ float FlashGainCorrection;
 float DacErrorCorrection = 0.99945;
 float MeasuredGainCodeValue = 7868944.1883;
 unsigned char StartConversion;
-unsigned char ReadConversionData = 0;
 
 
 uint8_t new_file_flag = 0;
@@ -86,21 +86,6 @@ uint8_t check_record(struct record_info r);
 uint8_t pack_data(uint8_t *data,struct record_info r);
 void pack_ht_data(void *buf,uint8_t flag);
 
-#define CONFIG_GPIO     GPIOA
-#define CONFIG_PIN			GPIO_Pin_1
-#define CONFIG_IO_RCC_CLK RCC_APB2Periph_GPIOA
-#define CONFIG_IO_GET_IN()  (0)//((CONFIG_GPIO->IDR & CONFIG_PIN)?(1):(0))
-void config_gpio_init(void)
-{
-	GPIO_InitTypeDef  GPIO_InitStructure;
-	
-	RCC_APB2PeriphClockCmd(CONFIG_IO_RCC_CLK, ENABLE);
-	
-	GPIO_InitStructure.GPIO_Pin = CONFIG_PIN;	 	     //端口配置, 推挽输出
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD; 		     //上拉输入
-	GPIO_Init(CONFIG_GPIO, &GPIO_InitStructure);
-}
-
 int main(void)
 {
 	//u8 t=0,r=0;
@@ -121,7 +106,7 @@ int main(void)
 	TIM_SetInterval(1,2000);//1ms
 	LED_Init();
 	//Key_Init();
-	config_gpio_init();
+	IO_Init();
 	SPI1_Init();
 	AT24CXX_Init();
 	
@@ -273,6 +258,7 @@ int main(void)
 	}*/
 	
 		ReadConversionData = 0;
+		ads1220_int_start();
     ADS1220_Start ();             // Kick off conversion
 
     // Gather and average 8 readings from the ADS1220
@@ -416,7 +402,10 @@ int main(void)
 			HYT939_Measure_Request();
 		}
 		
-		ads1220_temperature = ADS1220_Get_Temperature();
+		if(ReadConversionData){
+			ReadConversionData = 0;
+			ads1220_temperature = ADS1220_Get_Temperature();
+		}
 		//写文件
 		if(((new_record_count - status.last_record_tick) >= record_interval[config_r.freq]) || (new_record_count < status.last_record_tick)){
 			LED_ON(LED0);

@@ -117,7 +117,8 @@ int lps22hb_get_pressure(float *pressure)
       memset(data_raw_pressure.u8bit, 0x00, sizeof(int32_t));
       lps22hb_pressure_raw_get(&dev_ctx, data_raw_pressure.u8bit);
      
-      *pressure = lps22hb_from_lsb_to_hpa(data_raw_pressure.i32bit);
+      *pressure = lps22hb_from_lsb_to_hpa(data_raw_pressure.i32bit);//hPa
+			*pressure *= 100.0;//Pa
       //sprintf((char*)tx_buffer, "pressure [hPa]:%6.2f\r\n", pressure_hPa);
 
       /*tx_com(tx_buffer, strlen((char const*)tx_buffer));
