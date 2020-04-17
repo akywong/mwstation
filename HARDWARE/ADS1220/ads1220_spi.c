@@ -8,7 +8,7 @@
 #define ads1220_cs_h()             SPI1_ADS1220_CS_H()
 #define ads1220_cs_l()             SPI1_ADS1220_CS_L()
 #define ads1220_spi_rw_byte(x)     SPI1_ReadWriteByte(x)
-
+void ads1220_delay_ms(uint32_t period);
 
 unsigned char SPI_Write (unsigned char spiHandle, unsigned char *outData, unsigned char *inData, unsigned char length)
 {
@@ -16,9 +16,11 @@ unsigned char SPI_Write (unsigned char spiHandle, unsigned char *outData, unsign
 	
 	ads1220_spi_init();
 	ads1220_cs_l();
+	ads1220_delay_ms(1);
 	for(i=0; i<length; i++){
 		inData[i] = ads1220_spi_rw_byte(outData[i]);
 	}
+	ads1220_delay_ms(1);
 	ads1220_cs_h();
 	
 	return 0;

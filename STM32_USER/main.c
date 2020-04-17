@@ -90,7 +90,7 @@ int main(void)
 {
 	//u8 t=0,r=0;
 	volatile static unsigned char tempData[3];
-	unsigned char calibrateCount = 0;
+	//unsigned char calibrateCount = 0;
 	
 	//memset(&cur, 0, sizeof(struct fs_status));
 	memset(&status, 0, sizeof(struct sys_status));
@@ -115,9 +115,9 @@ int main(void)
 
     // Determine the ADS1220 Calibration offset - Short the AIN0 and AIN1 together and measure the results 4 times.
     // The average result will be subtracted from all future measurements.
-    Setup_ADS1220 (ADS1220_MUX_SHORTED, ADS1220_OP_MODE_NORMAL,
+    /*Setup_ADS1220 (ADS1220_MUX_SHORTED, ADS1220_OP_MODE_NORMAL,
                    ADS1220_CONVERSION_SINGLE_SHOT, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_16, ADS1220_USE_PGA,
-                   ADS1220_IDAC1_AIN3, ADS1220_IDAC2_AIN2, ADS1220_IDAC_CURRENT_250_UA);//ADS1220_IDAC2_DISABLED
+                   ADS1220_IDAC1_AIN3, ADS1220_IDAC2_AIN2, ADS1220_IDAC_CURRENT_250_UA);//ADS1220_IDAC2_DISABLED*/
 	
 	if(lps22hb_init()){
 		LED_ON(LED1);
@@ -258,8 +258,7 @@ int main(void)
 	}*/
 	
 		ReadConversionData = 0;
-		ads1220_int_start();
-    ADS1220_Start ();             // Kick off conversion
+    /*ADS1220_Start ();             // Kick off conversion
 
     // Gather and average 8 readings from the ADS1220
     while (calibrateCount < 8)
@@ -273,16 +272,17 @@ int main(void)
         // Start next calibration reading?
         if (calibrateCount < 8)
             ADS1220_Start ();
-    }
+    }*/
 	
 		// Configure ADS1220 for actual measurements
     Setup_ADS1220 (ADS1220_MUX_AIN0_AIN1, ADS1220_OP_MODE_NORMAL,
-                   ADS1220_CONVERSION_CONTINUOUS, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_16, ADS1220_USE_PGA,
-                   ADS1220_IDAC1_AIN3, ADS1220_IDAC2_AIN2, ADS1220_IDAC_CURRENT_250_UA);//ADS1220_IDAC2_DISABLED
+                   ADS1220_CONVERSION_SINGLE_SHOT, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_16, ADS1220_USE_PGA,
+                   ADS1220_IDAC1_AIN3, ADS1220_IDAC2_DISABLED, ADS1220_IDAC_CURRENT_100_UA);//ADS1220_IDAC2_DISABLED//ADS1220_IDAC2_AIN2
 	
 		delay_ms(50);
     StartConversion = 0;
     ReadConversionData = 0;
+		ads1220_int_start();
     ADS1220_Start ();      // Only one start needed for Continuous Mode
 	
 	USART2_Init(9600); //串口2初始化
@@ -405,6 +405,7 @@ int main(void)
 		if(ReadConversionData){
 			ReadConversionData = 0;
 			ads1220_temperature = ADS1220_Get_Temperature();
+			ADS1220_Start ();
 		}
 		//写文件
 		if(((new_record_count - status.last_record_tick) >= record_interval[config_r.freq]) || (new_record_count < status.last_record_tick)){

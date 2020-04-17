@@ -70,7 +70,14 @@ void ads1220_int_stop(void)
 unsigned char ReadConversionData = 0;
 void EXTI1_IRQHandler(void)
 {
-	ReadConversionData=1;
+	if (EXTI_GetITStatus(EXTI_Line1) != RESET)
+	{
+		EXTI_ClearITPendingBit(EXTI_Line1);		/* 清除中断标志位 */
+
+		ReadConversionData=1;
+		/* 执行上面的代码完毕后，再次清零中断标志 */
+		EXTI_ClearITPendingBit(EXTI_Line1);		/* 清除中断标志位 */
+	}
 }
 
 
