@@ -240,7 +240,7 @@ float calculateRValue (long code)
     float rtd;            // Must be volatile to force the order of operations below
 
 
-    rtd = (code * Rref * 2.0) / (PgaGainLevel * 8388607.0);
+    rtd = (code * Rref) / (PgaGainLevel * 8388607.0);// (code * Rref * 2.0) 
 
     return (rtd);
 }
