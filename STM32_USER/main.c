@@ -276,8 +276,8 @@ int main(void)
 	
 		// Configure ADS1220 for actual measurements
     Setup_ADS1220 (ADS1220_MUX_AIN0_AIN1, ADS1220_OP_MODE_NORMAL,
-                   ADS1220_CONVERSION_SINGLE_SHOT, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_16, ADS1220_USE_PGA,
-                   ADS1220_IDAC1_AIN2, ADS1220_IDAC2_DISABLED, ADS1220_IDAC_CURRENT_100_UA);//ADS1220_IDAC2_DISABLED//ADS1220_IDAC2_AIN2
+                   ADS1220_CONVERSION_SINGLE_SHOT, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_8, ADS1220_USE_PGA,
+                   ADS1220_IDAC1_AIN2, ADS1220_IDAC2_DISABLED, ADS1220_IDAC_CURRENT_500_UA);//ADS1220_IDAC2_DISABLED//ADS1220_IDAC2_AIN2
 	
 		delay_ms(50);
     StartConversion = 0;
@@ -508,10 +508,10 @@ void record_file_write(void)
 		/*record.wind_speed = record_old.wind_speed;
 		record.wind_direction = record_old.wind_direction;*/
 	}
-	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%6.2f,%6.2f,%7.2f,%6.2f,%7.2f",
+	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%6.2f,%6.2f,%7.2f,%6.2f,%7.2f,%6.2f",
 											calendar.w_year,calendar.w_month,calendar.w_date,calendar.hour,calendar.min,calendar.sec,
 											record.wind_speed,record.wind_direction,
-											record.temperature, record.humidity, record.pressure/100.0
+											record.temperature, record.humidity, record.pressure/100.0,ads1220_temperature
 											);
 	
 	prefix[len] = 0x0d;

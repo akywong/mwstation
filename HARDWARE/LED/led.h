@@ -29,12 +29,12 @@
 
 #define LED0_PIN   GPIO_Pin_5
 #define LED1_PIN   GPIO_Pin_5
-#define WINDRE_PIN GPIO_Pin_2
+#define WINDRE_PIN GPIO_Pin_0
 #define WINDDE_PIN GPIO_Pin_1
 
 #define LED0 PBout(5)// PB5
 #define LED1 PEout(5)// PE5
-#define WINDRE PBout(2)
+#define WINDRE PBout(0)
 #define WINDDE PBout(1)
 
 
