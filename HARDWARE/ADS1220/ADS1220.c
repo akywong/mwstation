@@ -395,11 +395,11 @@ void ADS1220_Get_Conversion_Data_Calibrated (unsigned char *conversionData)
 
     temp_voltage = (((long)tempData[0] << 16) + ((long)tempData[1] << 8) + (long)tempData[2]);
 
-    /*RawVoltage = temp_voltage;
+    //RawVoltage = temp_voltage;
 
     temp_voltage = temp_voltage - OffsetCalibrateValue;
 
-    CalVoltage = temp_voltage;
+    /*CalVoltage = temp_voltage;
 
     // Make sure that there is a value in place for the Gain
     if (*(unsigned long *)&FlashGainCorrection != 0xffffffff)
