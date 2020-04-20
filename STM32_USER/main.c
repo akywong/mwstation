@@ -289,11 +289,14 @@ int main(void)
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
 	HYT939_Measure_Request();
 	//IWDG_Init_2s();
-	IO_OFF(WINDRE);
+	IO_ON(WINDRE);
 	IO_ON(WINDDE);
 	pack_ht_data(send_htset_cmd,config_r.heat_flag);
 	USART_SendBuf(USART2,send_htset_cmd,13);
 	status.last_ht_cmd_tick = tick_count;
+	delay_ms(14);
+	IO_OFF(WINDRE);
+	IO_OFF(WINDDE);
 	while(1)
 	{
 		//IWDG_Feed();
@@ -352,9 +355,14 @@ int main(void)
 							wind.ht_flag = 2;
 						}
 						if(wind.ht_flag != config_r.heat_flag) {
+							IO_ON(WINDRE);
+							IO_ON(WINDDE);
 							pack_ht_data(send_htset_cmd,config_r.heat_flag);
 							USART_SendBuf(USART2,send_htset_cmd,13);
 							status.last_ht_cmd_tick = tick_count;
+							delay_ms(14);
+							IO_OFF(WINDRE);
+							IO_OFF(WINDDE);
 						}
 					}
 				}
