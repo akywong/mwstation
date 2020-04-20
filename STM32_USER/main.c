@@ -86,6 +86,7 @@ uint8_t check_record(struct record_info r);
 uint8_t pack_data(uint8_t *data,struct record_info r);
 void pack_ht_data(void *buf,uint8_t flag);
 
+#define UART_DELAY  12
 int main(void)
 {
 	//u8 t=0,r=0;
@@ -294,7 +295,7 @@ int main(void)
 	pack_ht_data(send_htset_cmd,config_r.heat_flag);
 	USART_SendBuf(USART2,send_htset_cmd,13);
 	status.last_ht_cmd_tick = tick_count;
-	delay_ms(14);
+	delay_ms(UART_DELAY+1);
 	IO_OFF(WINDRE);
 	IO_OFF(WINDDE);
 	while(1)
@@ -360,7 +361,7 @@ int main(void)
 							pack_ht_data(send_htset_cmd,config_r.heat_flag);
 							USART_SendBuf(USART2,send_htset_cmd,13);
 							status.last_ht_cmd_tick = tick_count;
-							delay_ms(14);
+							delay_ms(UART_DELAY+1);
 							IO_OFF(WINDRE);
 							IO_OFF(WINDDE);
 						}
@@ -373,14 +374,24 @@ int main(void)
 		if (0 == usart2_recv_flag){
 			if(status.cmd_send_flag){
 				if(((tick_count - status.last_cmd_tick) > 400) && ((tick_count - status.last_ht_cmd_tick)>200)){
+					IO_ON(WINDRE);
+					IO_ON(WINDDE);
 					USART_SendBuf(USART2,send_cmd,12);
           status.last_cmd_tick = tick_count;
+					delay_ms(UART_DELAY);
+					IO_OFF(WINDRE);
+					IO_OFF(WINDDE);
         }
 			}
 			if(((tick_count - status.last_cmd_tick) > 200) && ((status.ht_exp==1) || ((tick_count - status.last_ht_cmd_tick)>5000))){
 					status.ht_exp =0;
+					IO_ON(WINDRE);
+					IO_ON(WINDDE);
 					USART_SendBuf(USART2,send_htq_cmd,12);
           status.last_ht_cmd_tick = tick_count;
+					delay_ms(UART_DELAY);
+					IO_OFF(WINDRE);
+					IO_OFF(WINDDE);
       }
     }
 		//记录气压计信息

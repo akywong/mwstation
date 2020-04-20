@@ -215,10 +215,20 @@ void USART2_IRQHandler(void)
 	uint8_t Clear=Clear;
 	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
 	{ 
-			if(usart2_recv_cnt < 32) {
+			/*if(usart2_recv_cnt < 32) {
         usart2_recv[usart2_recv_cnt++] = USART2->DR;
-      }
-			usart2_recv_flag = 1;
+      }else{
+				usart2_recv_cnt=0;
+			}
+			usart2_recv_flag = 1;*/
+			uint8_t value = USART2->DR;
+			if(0x24==value){
+				usart2_recv_cnt = 0;
+				usart2_recv[usart2_recv_cnt++] = USART2->DR;
+			}else if(usart2_recv_cnt>0 && usart2_recv_cnt < 32){
+				usart2_recv[usart2_recv_cnt++] = USART2->DR;
+			}
+			//usart2_recv_flag = 1;
 	} 
 	else if(USART_GetITStatus(USART2, USART_IT_IDLE) != RESET) 
 	{
@@ -228,7 +238,7 @@ void USART2_IRQHandler(void)
       }
 			Clear=USART2->SR;
 			Clear=USART2->DR;
-       usart2_recv_flag = 0;
+       //usart2_recv_flag = 0;
 	}
 } 
 
