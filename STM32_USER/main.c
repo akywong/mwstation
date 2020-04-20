@@ -87,6 +87,7 @@ uint8_t pack_data(uint8_t *data,struct record_info r);
 void pack_ht_data(void *buf,uint8_t flag);
 
 #define UART_DELAY  12
+void RS485_send_data(void *buf,uint8_t len);
 int main(void)
 {
 	//u8 t=0,r=0;
@@ -290,14 +291,8 @@ int main(void)
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
 	HYT939_Measure_Request();
 	//IWDG_Init_2s();
-	IO_ON(WINDRE);
-	IO_ON(WINDDE);
 	pack_ht_data(send_htset_cmd,config_r.heat_flag);
-	USART_SendBuf(USART2,send_htset_cmd,13);
-	status.last_ht_cmd_tick = tick_count;
-	delay_ms(UART_DELAY+1);
-	IO_OFF(WINDRE);
-	IO_OFF(WINDDE);
+	RS485_send_data(send_htset_cmd,13);
 	while(1)
 	{
 		//IWDG_Feed();
@@ -356,14 +351,9 @@ int main(void)
 							wind.ht_flag = 2;
 						}
 						if(wind.ht_flag != config_r.heat_flag) {
-							IO_ON(WINDRE);
-							IO_ON(WINDDE);
 							pack_ht_data(send_htset_cmd,config_r.heat_flag);
-							USART_SendBuf(USART2,send_htset_cmd,13);
+							RS485_send_data(send_htset_cmd,13);
 							status.last_ht_cmd_tick = tick_count;
-							delay_ms(UART_DELAY+1);
-							IO_OFF(WINDRE);
-							IO_OFF(WINDDE);
 						}
 					}
 				}
@@ -374,24 +364,14 @@ int main(void)
 		if (0 == usart2_recv_flag){
 			if(status.cmd_send_flag){
 				if(((tick_count - status.last_cmd_tick) > 400) && ((tick_count - status.last_ht_cmd_tick)>200)){
-					IO_ON(WINDRE);
-					IO_ON(WINDDE);
-					USART_SendBuf(USART2,send_cmd,12);
+					RS485_send_data(send_cmd,12);
           status.last_cmd_tick = tick_count;
-					delay_ms(UART_DELAY);
-					IO_OFF(WINDRE);
-					IO_OFF(WINDDE);
         }
 			}
 			if(((tick_count - status.last_cmd_tick) > 200) && ((status.ht_exp==1) || ((tick_count - status.last_ht_cmd_tick)>5000))){
 					status.ht_exp =0;
-					IO_ON(WINDRE);
-					IO_ON(WINDDE);
-					USART_SendBuf(USART2,send_htq_cmd,12);
+					RS485_send_data(send_htq_cmd,12);
           status.last_ht_cmd_tick = tick_count;
-					delay_ms(UART_DELAY);
-					IO_OFF(WINDRE);
-					IO_OFF(WINDDE);
       }
     }
 		//记录气压计信息
@@ -684,4 +664,18 @@ uint8_t check_record(struct record_info r)
 	}else{
 		return 0;
 	}*/
+}
+void RS485_send_data(void *buf,uint8_t len)
+{
+	int i;
+	uint8_t *p=(uint8_t *)buf;
+	IO_ON(WINDRE);
+	IO_ON(WINDDE);
+	for(i=0;i<len;i++){
+		while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
+		USART_SendData(USART2,p[i]);
+	}
+	while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
+	IO_OFF(WINDRE);
+	IO_OFF(WINDDE);
 }
