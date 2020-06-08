@@ -290,12 +290,12 @@ int main(void)
 	USART2_Init(9600); //串口2初始化
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
 	HYT939_Measure_Request();
-	//IWDG_Init_2s();
+	IWDG_Init_2s();
 	pack_ht_data(send_htset_cmd,config_r.heat_flag);
 	RS485_send_data(send_htset_cmd,13);
 	while(1)
 	{
-		//IWDG_Feed();
+		IWDG_Feed();
 		/*if(new_file_flag == 1) {
 			f_close(&cur.fsrc);
 			new_file_flag = 0;
@@ -327,6 +327,7 @@ int main(void)
 				}
 			}
 		}
+		IWDG_Feed();
 		//记录风速计信息
 		if(usart2_recv_frame_flag) {
 				wind.info_str = check_wind_info((char*)usart2_recv, usart2_recv_cnt);
@@ -363,17 +364,18 @@ int main(void)
     } 
 		if (0 == usart2_recv_flag){
 			if(status.cmd_send_flag){
-				if(((tick_count - status.last_cmd_tick) > 400) && ((tick_count - status.last_ht_cmd_tick)>200)){
+				if(((tick_count - status.last_cmd_tick) > 400) && ((tick_count - status.last_ht_cmd_tick)>400)){
 					RS485_send_data(send_cmd,12);
           status.last_cmd_tick = tick_count;
         }
 			}
-			if(((tick_count - status.last_cmd_tick) > 200) && ((status.ht_exp==1) || ((tick_count - status.last_ht_cmd_tick)>5000))){
+			if(((tick_count - status.last_cmd_tick) > 400) && ((status.ht_exp==1) || ((tick_count - status.last_ht_cmd_tick)>5000))){
 					status.ht_exp =0;
 					RS485_send_data(send_htq_cmd,12);
           status.last_ht_cmd_tick = tick_count;
       }
     }
+		IWDG_Feed();
 		//记录气压计信息
 		if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
 			status.last_press = tick_count;
@@ -385,7 +387,7 @@ int main(void)
 				}
 			}
 		}
-		
+		IWDG_Feed();
 		//记录温湿度计信息
 		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
 			status.last_sensor = tick_count;
@@ -400,13 +402,14 @@ int main(void)
 			}
 			HYT939_Measure_Request();
 		}
-		
+		IWDG_Feed();
 		if(ReadConversionData){
 			ReadConversionData = 0;
 			ads1220_temperature = ADS1220_Get_Temperature();
 			ADS1220_Start ();
 		}
 		//写文件
+		IWDG_Feed();
 		if(((new_record_count - status.last_record_tick) >= record_interval[config_r.freq]) || (new_record_count < status.last_record_tick)){
 			LED_ON(LED0);
 			status.last_record_tick = new_record_count;
