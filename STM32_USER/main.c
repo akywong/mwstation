@@ -46,19 +46,29 @@ uint8_t pms_start_cmd[]={0x7E,0x00,0x03,0x00,0xFC,0x7E};
 uint16_t record_interval[6]={1,1,10,60,600,3600};
 
 struct record_info{
-	float wind_speed;
-	float wind_direction;
-	uint32_t wind_count;
 	float temperature;
 	float humidity;
 	uint32_t sensor_count;
 	float pressure;
 	uint32_t press_count;
-	u8 flag;
+	float PM1pm;
+	float PM2_5pm;
+	float PM4pm;
+	float PM10pm;
+	float PM0_5pcm;
+	float PM1pcm;
+	float PM2_5pcm;
+	float PM4pcm;
+	float PM10pcm;
+	float tps;
+	uint32_t pm_count;
+	u16 flag;
 };
 struct record_info record;
 struct record_info record_old;
 struct record_info record_last;
+
+struct pm_info pm;
 
 //
 struct sys_status status;
@@ -74,14 +84,12 @@ double humidity;
 float ads1220_temperature;
 
 //struct sys_config test_config;
-void *check_pms_info(uint8_t *str, int len);
+int check_pms_info(uint8_t *str, int len);
 void record_file_write(void);
 //void record_head(void);
 uint32_t check_config(uint8_t *data);
 uint32_t check_cmd(uint8_t *data);
 uint8_t check_between(int min, int max, float data);
-uint8_t check_wind_speed(float speed);
-uint8_t check_wind_direction(float direction);
 uint8_t check_temperature(float temp);
 uint8_t check_pressure(float pressure);
 uint8_t check_humidity(float humidity);
@@ -99,7 +107,7 @@ int main(void)
 	
 	//memset(&cur, 0, sizeof(struct fs_status));
 	memset(&status, 0, sizeof(struct sys_status));
-	//memset(&wind, 0,sizeof(struct wind_info));
+	memset(&pm, 0,sizeof(struct pm_info));
 	memset(&record, 0, sizeof(record));
 	memset(&record_old, 0, sizeof(record_old));
 	memset(&record_old, 0, sizeof(record_last));
@@ -332,51 +340,28 @@ int main(void)
 		IWDG_Feed();
 		//记录风速计信息
 		if(usart2_recv_frame_flag) {
-				check_pms_info(usart2_recv, usart2_recv_cnt);
-				/*if(wind.info_str != NULL) {
-					if(strstr((char*)usart2_recv,"$WI,WVP=") == (char*)usart2_recv) {
-						sscanf(wind.info_str,"%f,%f,%d",&wind.speed, &wind.direction,&wind.status);
-						if(check_wind_speed(wind.speed) && check_wind_direction(wind.direction)) {
-							record.wind_speed += wind.speed;
-							record.wind_direction += wind.direction;
-							record_last.wind_speed = wind.speed;
-							record_last.wind_direction = wind.direction;
-							record.wind_count++;
-							status.last_wind_info = tick_count;
-						}
-					}else if(strstr((char*)usart2_recv,"$WI,HT=") == (char*)usart2_recv){
-						sscanf(wind.info_str,"%d,",&wind.ht);
-						if(wind.ht == 99){
-							wind.ht_flag = 0;
-						}else if(wind.ht == FT742_HT_TEMP){
-							wind.ht_flag = 1;
-						} else {
-							wind.ht_flag = 2;
-						}
-						if(wind.ht_flag != config_r.heat_flag) {
-							pack_ht_data(send_htset_cmd,config_r.heat_flag);
-							RS485_send_data(send_htset_cmd,13);
-							status.last_ht_cmd_tick = tick_count;
-						}
-					}
-				}*/
+				int ret = check_pms_info(usart2_recv, usart2_recv_cnt);
+			  if(ret == 1){
+					RS485_send_data(pms_start_cmd,6);
+				}else if(ret == 0){
+					RS485_send_data(pms_init_cmd,8);
+				}else{
+					record.PM1pm += pm.PM1pm;
+					record.PM2_5pm += pm.PM2_5pm;
+					record.PM4pm += pm.PM4pm;
+					record.PM10pm += pm.PM10pm;
+					record.PM0_5pcm += pm.PM0_5pcm;
+					record.PM1pcm += pm.PM1pcm;
+					record.PM2_5pcm += pm.PM2_5pcm;
+					record.PM4pcm += pm.PM4pcm;
+					record.PM10pcm += pm.PM10pcm;
+					record.tps += pm.tps;
+					record.pm_count++;
+				}
         usart2_recv_frame_flag = 0;
         usart2_recv_cnt = 0;
         memset(usart2_recv,0,32);
     } 
-		if (0 == usart2_recv_flag){
-			if(status.cmd_send_flag){
-				if(((tick_count - status.last_cmd_tick) > 400) && ((tick_count - status.last_ht_cmd_tick)>400)){
-					RS485_send_data(send_cmd,12);
-          status.last_cmd_tick = tick_count;
-        }
-			}
-			if(((tick_count - status.last_cmd_tick) > 400) && ((status.ht_exp==1) || ((tick_count - status.last_ht_cmd_tick)>5000))){
-					status.ht_exp =0;
-					RS485_send_data(send_htq_cmd,12);
-          status.last_ht_cmd_tick = tick_count;
-      }
-    }
 		IWDG_Feed();
 		//记录气压计信息
 		if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
@@ -422,29 +407,65 @@ int main(void)
 	}
 }
 //检查风速计信息格式
-void *check_pms_info(uint8_t *str, int len)
+int check_pms_info(uint8_t *str, int len)
 {
     int i;
 		uint32_t sval=0;
 	  uint8_t chk;
+		uint8_t temp_pm[80];
+		uint8_t flag=0;
+	  uint8_t real_count;
 
     if(str == NULL || len>64) {
-        return NULL;
+        return 0;
     } 
 
     if(str[0] != 0x7E || str[len-1] != 0x7E) {
-        return NULL;
+        return 0;
     }
     for(i=1;i<len-2;i++) {
         sval += str[i];
+			  if(i>4){
+					if(flag==0){
+						if(str[i]!=0x7D){
+							temp_pm[real_count++]=str[i];
+						}else{
+							flag =1;
+						}
+					}else{
+						switch(str[i]){
+							case 0x5E:
+								temp_pm[real_count++] = 0x7E;
+							break;
+							case 0x5D:
+								temp_pm[real_count++] = 0x7D;
+							break;
+							case 0x31:
+								temp_pm[real_count++] = 0x11;
+							break;
+							case 0x33:
+								temp_pm[real_count++] = 0x13;
+							break;
+							default:
+								break;
+						}
+						flag = 0;
+					}
+				}
     } 
     sval &= 0xff;
 		chk = sval&0xff;
 		chk = ~chk;
 		if(str[i-2]!=chk){
-			return NULL;
+			return 0;
 		}
-		return str;
+		if(real_count == 1){
+			return 1;
+		}else if(real_count == 40){
+			memcpy(&pm,temp_pm,40);
+			return 2;
+		}
+		return 0;
 }
 void pack_ht_data(void *buf,uint8_t flag)
 {
@@ -492,17 +513,27 @@ void record_file_write(void)
 		//record.pressure /= ((float)record.sensor_count);
 		record.flag |= 3;
 	}
-	if(record.wind_count != 0) {
-		record.wind_speed /= ((float)record.wind_count);
-		record.wind_direction /= ((float)record.wind_count);
-		record.flag |= 3<<3;
+	if(record.pm_count != 0) {
+		record.PM1pm /= ((float)record.pm_count);
+		record.PM2_5pm /= ((float)record.pm_count);
+		record.PM4pm /= ((float)record.pm_count);
+		record.PM10pm /= ((float)record.pm_count);
+		record.PM0_5pcm /= ((float)record.pm_count);
+		record.PM1pcm /= ((float)record.pm_count);
+		record.PM2_5pcm /= ((float)record.pm_count);
+		record.PM4pcm /= ((float)record.pm_count);
+		record.PM10pcm /= ((float)record.pm_count);
+		record.tps /= ((float)record.pm_count);
+		record.flag |= 0x3ff<<3;
 	}else{
 		/*record.wind_speed = record_old.wind_speed;
 		record.wind_direction = record_old.wind_direction;*/
 	}
-	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%6.2f,%6.2f,%7.2f,%6.2f,%7.2f,%6.2f",
+	
+	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%7.2f,%6.2f,%7.2f,%6.2f",
 											calendar.w_year,calendar.w_month,calendar.w_date,calendar.hour,calendar.min,calendar.sec,
-											record.wind_speed,record.wind_direction,
+											record.PM1pm,record.PM2_5pm,record.PM4pm,record.PM10pm,record.PM0_5pcm,
+											record.PM1pcm,record.PM2_5pcm,record.PM4pcm,record.PM10pcm,record.tps,
 											record.temperature, record.humidity, record.pressure/100.0,ads1220_temperature
 											);
 	
@@ -527,11 +558,18 @@ void record_file_write(void)
 		record_old.humidity = record.humidity;
 		record_old.temperature = record.temperature;
 		record_old.pressure = record.pressure;
-		record_old.wind_speed = record.wind_speed;
-		record_old.wind_direction = record.wind_direction;
+		record_old.PM1pm = record.PM1pm;
+		record_old.PM2_5pm = record.PM2_5pm;
+		record_old.PM4pm = record.PM4pm;
+		record_old.PM10pm = record.PM10pm;
+		record_old.PM0_5pcm = record.PM0_5pcm;
+		record_old.PM1pcm = record.PM1pcm;
+		record_old.PM2_5pcm = record.PM2_5pcm;
+		record_old.PM4pcm = record.PM4pcm;
+		record_old.PM10pcm = record.PM10pcm;
+		record_old.tps = record.tps;
 		memset(&record, 0, sizeof(record));
 }
-
 /*void record_head(void)
 {
 	int len;
@@ -544,7 +582,7 @@ void record_file_write(void)
 	str[len+1] = 0x0a;
 	len+=2;
 	
-	len += sprintf(str+len,"\"日期时间\",\"序号\",\"总辐射\",\"直接辐射\",\"散射辐射\",\"倾斜辐射\",\"风速\",\"风向\",\"空气温度\",\"空气湿度\",\"大气压力\"");
+	len += sprintf(str+len,"\"日期时间\",\"序号\",\"总辐射\",\"直接辐射\",\"散射辐射\",\"倾斜辐射\",\"PM1.0\",\"PM2.5\",\"PM4.0\",\"PM10\",\"PM0.5\",\"PM1.0\",\"PM2.5\",\"PM4.0\",\"PM10\",\"TPS\",\"空气温度\",\"空气湿度\",\"大气压力\"");
 	str[len] = 0x0d;
 	str[len+1] = 0x0a;
 	len+=2;
@@ -599,8 +637,8 @@ uint8_t pack_data(uint8_t *data,struct record_info r)
 		memcpy(data+2,&(r.temperature),4);
 		memcpy(data+6,&(r.humidity),4);
 		memcpy(data+10,&(r.pressure),4);
-		memcpy(data+14,&(r.wind_speed),4);
-		memcpy(data+18,&(r.wind_direction),4);
+		//memcpy(data+14,&(r.wind_speed),4);
+		//memcpy(data+18,&(r.wind_direction),4);
 		data[22] = flag&record.flag;
 		data[23] = CRC_calCrc8((const unsigned char *)data, 23);
 		data[24]=0xAA;
@@ -647,8 +685,8 @@ uint8_t check_record(struct record_info r)
 	flag |= check_temperature(r.temperature);
 	flag |= check_humidity(r.humidity)<<1;
 	flag |= check_pressure(r.pressure)<<2;
-	flag |= check_wind_speed(r.wind_speed)<<3;
-	flag |= check_wind_direction(r.wind_direction)<<4;
+	//flag |= check_wind_speed(r.wind_speed)<<3;
+	//flag |= check_wind_direction(r.wind_direction)<<4;
 	
 	return flag;
 	

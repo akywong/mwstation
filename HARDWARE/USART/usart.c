@@ -207,7 +207,7 @@ void USART1_IRQHandler(void)                	//串口1中断服务程序
 	}
 }
 
-
+//uint8_t slip_flag =0;
 
 //串口2中断函数
 void USART2_IRQHandler(void)
@@ -215,27 +215,16 @@ void USART2_IRQHandler(void)
 	uint8_t Clear=Clear;
 	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
 	{ 
-			/*if(usart2_recv_cnt < 32) {
+			if(usart2_recv_cnt < 128) {
         usart2_recv[usart2_recv_cnt++] = USART2->DR;
       }else{
 				usart2_recv_cnt=0;
-			}
-			usart2_recv_flag = 1;*/
-			uint8_t value = USART2->DR;
-			if(0x24==value){
-				usart2_recv_cnt = 0;
-				usart2_recv[usart2_recv_cnt++] = USART2->DR;
-			}else if(usart2_recv_cnt>0 && usart2_recv_cnt < 32){
-				usart2_recv[usart2_recv_cnt++] = USART2->DR;
 			}
 			//usart2_recv_flag = 1;
 	} 
 	else if(USART_GetITStatus(USART2, USART_IT_IDLE) != RESET) 
 	{
-		
-			if((memcmp("$", usart2_recv, 1) == 0 ) && (usart2_recv[usart2_recv_cnt-2] == 0x0D) &&  (usart2_recv[usart2_recv_cnt-1] == 0x0A)) {
-        usart2_recv_frame_flag = 1;
-      }
+      usart2_recv_frame_flag = 1;
 			Clear=USART2->SR;
 			Clear=USART2->DR;
        //usart2_recv_flag = 0;

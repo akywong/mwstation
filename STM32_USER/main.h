@@ -32,14 +32,17 @@ struct sys_status{
 		uint8_t ht_exp;
 };
 
-struct wind_info{
-	char  *info_str;
-	float speed;
-	float direction;
-	int   ht;
-	//char status;
-	int status;
-	uint8_t ht_flag;
+struct pm_info{
+	float PM1pm;
+	float PM2_5pm;
+	float PM4pm;
+	float PM10pm;
+	float PM0_5pcm;
+	float PM1pcm;
+	float PM2_5pcm;
+	float PM4pcm;
+	float PM10pcm;
+	float tps;
 };
 
 struct sys_config{
