@@ -40,6 +40,9 @@ uint8_t send_cmd[12] = {0x24,0x30,0x31,0x2C,0x57,0x56,0x3F,0x2A,0x2F,0x2F,0x0D,0
 uint8_t send_htset_cmd[13] ={0x24,0x30,0x31,0x2C,0x48,0x54,0x39,0x39,0x2A,0x2F,0x2F,0x0D,0x0A};//$01,HT99*//<cr><lf>
 uint8_t send_htq_cmd[12]={0x24,0x30,0x31,0x2C,0x48,0x54,0x3F,0x2A,0x2F,0x2F,0x0D,0x0A};//$01,HT?*//<cr><lf>
 
+uint8_t pms_init_cmd[8]={0x7E,0x00,0x00,0x02,0x01,0x03,0xF9,0x7E};
+uint8_t pms_start_cmd[]={0x7E,0x00,0x03,0x00,0xFC,0x7E};
+
 uint16_t record_interval[6]={1,1,10,60,600,3600};
 
 struct record_info{
@@ -60,7 +63,7 @@ struct record_info record_last;
 //
 struct sys_status status;
 struct sys_config config_r,config_t;
-struct wind_info  wind;
+//
 //struct fs_status cur;
 //struct bme280_dev dev;
 //struct bme280_data comp_data;
@@ -71,7 +74,7 @@ double humidity;
 float ads1220_temperature;
 
 //struct sys_config test_config;
-char *check_wind_info(char *str, int len);
+void *check_pms_info(uint8_t *str, int len);
 void record_file_write(void);
 //void record_head(void);
 uint32_t check_config(uint8_t *data);
@@ -96,7 +99,7 @@ int main(void)
 	
 	//memset(&cur, 0, sizeof(struct fs_status));
 	memset(&status, 0, sizeof(struct sys_status));
-	memset(&wind, 0,sizeof(struct wind_info));
+	//memset(&wind, 0,sizeof(struct wind_info));
 	memset(&record, 0, sizeof(record));
 	memset(&record_old, 0, sizeof(record_old));
 	memset(&record_old, 0, sizeof(record_last));
@@ -287,12 +290,11 @@ int main(void)
     ReadConversionData = 0;
     ADS1220_Start ();      // Only one start needed for Continuous Mode
 	
-	USART2_Init(9600); //串口2初始化
+	USART2_Init(115200); //串口2初始化
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
 	HYT939_Measure_Request();
 	IWDG_Init_2s();
-	pack_ht_data(send_htset_cmd,config_r.heat_flag);
-	RS485_send_data(send_htset_cmd,13);
+	RS485_send_data(pms_init_cmd,8);
 	while(1)
 	{
 		IWDG_Feed();
@@ -330,8 +332,8 @@ int main(void)
 		IWDG_Feed();
 		//记录风速计信息
 		if(usart2_recv_frame_flag) {
-				wind.info_str = check_wind_info((char*)usart2_recv, usart2_recv_cnt);
-				if(wind.info_str != NULL) {
+				check_pms_info(usart2_recv, usart2_recv_cnt);
+				/*if(wind.info_str != NULL) {
 					if(strstr((char*)usart2_recv,"$WI,WVP=") == (char*)usart2_recv) {
 						sscanf(wind.info_str,"%f,%f,%d",&wind.speed, &wind.direction,&wind.status);
 						if(check_wind_speed(wind.speed) && check_wind_direction(wind.direction)) {
@@ -357,7 +359,7 @@ int main(void)
 							status.last_ht_cmd_tick = tick_count;
 						}
 					}
-				}
+				}*/
         usart2_recv_frame_flag = 0;
         usart2_recv_cnt = 0;
         memset(usart2_recv,0,32);
@@ -420,41 +422,29 @@ int main(void)
 	}
 }
 //检查风速计信息格式
-char *check_wind_info(char *str, int len)
+void *check_pms_info(uint8_t *str, int len)
 {
     int i;
-    int xor_value = 0;
-    int value ;
-    int equal_sign=0;
-    int asterisk =0;
+		uint32_t sval=0;
+	  uint8_t chk;
 
-    if(str == NULL || len>31) {
+    if(str == NULL || len>64) {
         return NULL;
     } 
 
-    if(*str != '$' || str[len-2] != 0x0d || str[len-1] != 0x0a) {
+    if(str[0] != 0x7E || str[len-1] != 0x7E) {
         return NULL;
     }
     for(i=1;i<len-2;i++) {
-        if(str[i] == '=') {
-            equal_sign = i;
-        }else if(str[i] == '*') {
-            asterisk = i;
-            break;
-        }
-        xor_value ^= str[i];
+        sval += str[i];
     } 
-    
-    if(equal_sign ==0 || asterisk == 0) {
-        return NULL;
-    }
-    
-    sscanf(str+i+1,"%x",&value);
-    if(xor_value != value) {
-        return NULL;
-    }
-    
-    return (str+equal_sign+1);
+    sval &= 0xff;
+		chk = sval&0xff;
+		chk = ~chk;
+		if(str[i-2]!=chk){
+			return NULL;
+		}
+		return str;
 }
 void pack_ht_data(void *buf,uint8_t flag)
 {
@@ -672,13 +662,9 @@ void RS485_send_data(void *buf,uint8_t len)
 {
 	int i;
 	uint8_t *p=(uint8_t *)buf;
-	IO_ON(WINDRE);
-	IO_ON(WINDDE);
 	for(i=0;i<len;i++){
 		while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
 		USART_SendData(USART2,p[i]);
 	}
 	while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
-	IO_OFF(WINDRE);
-	IO_OFF(WINDDE);
 }
