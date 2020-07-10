@@ -6,21 +6,16 @@
 #include "serial_rtx.h"
 #include "usart.h"
 #include "led.h"
-//#include "w25qxx.h"
+#include "w25qxx.h"
 #include "string.h"
-//#include "ff.h"
-//#include "sdio_sdcard.h"
+#include "ff.h"
+#include "sdio_sdcard.h"
 #include "rtc.h"
 #include "timer.h"
 #include "spi.h"
 //#include "key.h"
 #include "24cxx.h"
-//#include "adc.h"
-#include "lps22hb.h"
-#include "bsp_ads1256.h"
 #include "iwdg.h"
-#include "hyt939.h"
-#include "ADS1220.h"
 #include "io.h"
 #include "utils.h"
 #include "main.h"
@@ -69,14 +64,11 @@ struct record_info record_old;
 struct record_info record_last;
 
 struct pm_info pm;
-
+struct fs_status cur;
 //
 struct sys_status status;
 struct sys_config config_r,config_t;
 //
-//struct fs_status cur;
-//struct bme280_dev dev;
-//struct bme280_data comp_data;
 float pressure;
 double temperature;
 double humidity;
@@ -89,23 +81,19 @@ void record_file_write(void);
 //void record_head(void);
 uint32_t check_config(uint8_t *data);
 uint32_t check_cmd(uint8_t *data);
-uint8_t check_between(int min, int max, float data);
-uint8_t check_temperature(float temp);
-uint8_t check_pressure(float pressure);
-uint8_t check_humidity(float humidity);
-uint8_t check_record(struct record_info r);
-uint8_t pack_data(uint8_t *data,struct record_info r);
-void pack_ht_data(void *buf,uint8_t flag);
+//uint8_t check_between(int min, int max, float data);
+//uint8_t check_record(struct record_info r);
+//uint8_t pack_data(uint8_t *data,struct record_info r);
+//void pack_ht_data(void *buf,uint8_t flag);
+void record_head(void);
 
 #define UART_DELAY  12
 void RS485_send_data(void *buf,uint8_t len);
 int main(void)
 {
-	//u8 t=0,r=0;
-	volatile static unsigned char tempData[3];
-	unsigned char calibrateCount = 0;
+	u8 t=0,r=0;
 	
-	//memset(&cur, 0, sizeof(struct fs_status));
+	memset(&cur, 0, sizeof(struct fs_status));
 	memset(&status, 0, sizeof(struct sys_status));
 	memset(&pm, 0,sizeof(struct pm_info));
 	memset(&record, 0, sizeof(record));
@@ -123,26 +111,13 @@ int main(void)
 	SPI1_Init();
 	AT24CXX_Init();
 	
-	// Reset the ADS1220
-    ADS1220_Reset();
-
-    // Determine the ADS1220 Calibration offset - Short the AIN0 and AIN1 together and measure the results 4 times.
-    // The average result will be subtracted from all future measurements.
-    Setup_ADS1220 (ADS1220_MUX_SHORTED, ADS1220_OP_MODE_NORMAL,
-                   ADS1220_CONVERSION_SINGLE_SHOT, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_8, ADS1220_USE_PGA,
-                   ADS1220_IDAC1_AIN2, ADS1220_IDAC2_DISABLED, ADS1220_IDAC_CURRENT_500_UA);//ADS1220_IDAC2_DISABLED*/
-	
-	if(lps22hb_init()){
-		LED_ON(LED1);
-	}
-	
 	USART1_Init(115200); //串口1初始化
 	USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
-	USART3_Init(9600); //串口3初始化
-	USART_ITConfig(USART3, USART_IT_IDLE, ENABLE);
+	//USART3_Init(9600); //串口3初始化
+	//USART_ITConfig(USART3, USART_IT_IDLE, ENABLE);
 	
 	
-	{
+	if(0){
 		config_t.head = 0xAA;
 		config_t.tail = 0xAA;
 		config_t.type = 0x01;
@@ -218,15 +193,11 @@ int main(void)
 	}
 	
 	
-	//lps22hb_init(&dev);
-	
-	HYT939_Measure_Request();
-	
 	status.cmd_send_flag = 1;
 	
-	//Start:
+//	Start:
 	//开始初始化SD卡
-	/*
+	
 	while( SD_OK != SD_Init() ){
 		delay_ms(30);
 		t++;
@@ -268,45 +239,17 @@ int main(void)
 		LED_ON(LED0);
 		record_head();
 		LED_OFF(LED0);
-	}*/
+	}
 	
-		ReadConversionData = 0;
-		ads1220_int_start();
-    ADS1220_Start ();             // Kick off conversion
-
-    // Gather and average 8 readings from the ADS1220
-    while (calibrateCount < 8)
-    {
-        while (!ReadConversionData);   // Wait for Data Ready interrupt
-        ReadConversionData = 0;
-        ADS1220_Get_Conversion_Data ((unsigned char *)tempData);   // Get the raw data
-        ADS1220_Offset_Calibrate_Data ((unsigned char *)tempData);        // Send results to calibration function
-        calibrateCount++;
-
-        // Start next calibration reading?
-        if (calibrateCount < 8)
-            ADS1220_Start ();
-    }
-	
-		// Configure ADS1220 for actual measurements
-    Setup_ADS1220 (ADS1220_MUX_AIN0_AIN1, ADS1220_OP_MODE_NORMAL,
-                   ADS1220_CONVERSION_SINGLE_SHOT, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_8, ADS1220_USE_PGA,
-                   ADS1220_IDAC1_AIN2, ADS1220_IDAC2_DISABLED, ADS1220_IDAC_CURRENT_500_UA);//ADS1220_IDAC2_DISABLED//ADS1220_IDAC2_AIN2
-	
-		delay_ms(50);
-    StartConversion = 0;
-    ReadConversionData = 0;
-    ADS1220_Start ();      // Only one start needed for Continuous Mode
 	
 	USART2_Init(115200); //串口2初始化
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
-	HYT939_Measure_Request();
-	IWDG_Init_2s();
+	//IWDG_Init_2s();
 	RS485_send_data(pms_init_cmd,8);
 	while(1)
 	{
-		IWDG_Feed();
-		/*if(new_file_flag == 1) {
+		//IWDG_Feed();
+		if(new_file_flag == 1) {
 			f_close(&cur.fsrc);
 			new_file_flag = 0;
 			snprintf(cur.fpath,32,"%04d-%02d-%02d.txt",
@@ -323,8 +266,8 @@ int main(void)
 			if(cur.fsrc.fsize == 0){
 				record_head();
 			}
-		}*/
-		if(usart3_recv_frame_flag){
+		}
+		/*if(usart3_recv_frame_flag){
 			usart3_recv_frame_flag = 0;
 			if(check_config((uint8_t *)usart3_recv)){
 				memcpy(&config_r,usart3_recv,sizeof(config_r));
@@ -336,9 +279,9 @@ int main(void)
 					USART_SendBuf(USART3,uart_data,25);
 				}
 			}
-		}
-		IWDG_Feed();
-		//记录风速计信息
+		}*/
+		//IWDG_Feed();
+		//记录空气质量监测信息
 		if(usart2_recv_frame_flag) {
 				int ret = check_pms_info(usart2_recv, usart2_recv_cnt);
 			  if(ret == 1){
@@ -362,41 +305,9 @@ int main(void)
         usart2_recv_cnt = 0;
         memset(usart2_recv,0,32);
     } 
-		IWDG_Feed();
-		//记录气压计信息
-		if(((tick_count - status.last_press) >400) || (tick_count < status.last_press)) {
-			status.last_press = tick_count;
-			if(0 == lps22hb_get_pressure(&pressure)){
-				if(check_pressure(pressure)) {
-					record.pressure += pressure;
-					record_last.pressure = pressure;
-					record.press_count++;
-				}
-			}
-		}
-		IWDG_Feed();
-		//记录温湿度计信息
-		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
-			status.last_sensor = tick_count;
-			if(0==HYT939_Data_Fetch(&humidity,&temperature)) {
-				if(check_humidity(humidity) && check_temperature(temperature)) {
-					record.humidity += humidity;
-					record.temperature += temperature;
-					record_last.humidity = humidity;
-					record_last.temperature = temperature;
-					record.sensor_count++;
-				}
-			}
-			HYT939_Measure_Request();
-		}
-		IWDG_Feed();
-		if(ReadConversionData){
-			ReadConversionData = 0;
-			ads1220_temperature = ADS1220_Get_Temperature();
-			ADS1220_Start ();
-		}
+
+		//IWDG_Feed();
 		//写文件
-		IWDG_Feed();
 		if(((new_record_count - status.last_record_tick) >= record_interval[config_r.freq]) || (new_record_count < status.last_record_tick)){
 			LED_ON(LED0);
 			status.last_record_tick = new_record_count;
@@ -406,7 +317,7 @@ int main(void)
 		delay_ms(100);
 	}
 }
-//检查风速计信息格式
+//
 int check_pms_info(uint8_t *str, int len)
 {
     int i;
@@ -467,52 +378,16 @@ int check_pms_info(uint8_t *str, int len)
 		}
 		return 0;
 }
-void pack_ht_data(void *buf,uint8_t flag)
-{
-	uint8_t temp=99;
-	//uint8_t xor_value = 0;
-	uint8_t *data=(uint8_t*)buf;
-	//int i;
-	if(flag!=0) {
-		temp = FT742_HT_TEMP;
-	}else{
-		temp = 99;
-	}
-	data[6] = 0x30+temp/10;
-	data[7] = 0x30+temp%10;
-	
-	/*for(i=1;i<8;i++) {
-		xor_value ^= data[i];
-  }
-	
-	data[9] = 0x30+xor_value/16;
-	data[10] = 0x30+xor_value%16;*/
-}
+
 void record_file_write(void)
 {
 	//uint8_t valid_flag = 0;
-	//UINT count;
-	//u8 ret;
+	UINT count;
+	u8 ret;
 	int len;
 	char prefix[128]={0};
-	uint8_t uart_data[64]={0};
+	//uint8_t uart_data[64]={0};
 	
-	if(record.press_count !=0 ){
-		//record.humidity /= ((float)record.sensor_count);
-		//record.temperature /= ((float)record.sensor_count);
-		record.pressure /= ((float)record.press_count);
-		record.flag |= 1<<2;
-	}else{
-		/*record.humidity = record_old.humidity;
-		record.temperature = record_old.temperature;
-		record.pressure = record_old.pressure;*/
-	}
-	if(record.sensor_count !=0 ){
-		record.humidity /= ((float)record.sensor_count);
-		record.temperature /= ((float)record.sensor_count);
-		//record.pressure /= ((float)record.sensor_count);
-		record.flag |= 3;
-	}
 	if(record.pm_count != 0) {
 		record.PM1pm /= ((float)record.pm_count);
 		record.PM2_5pm /= ((float)record.pm_count);
@@ -530,16 +405,15 @@ void record_file_write(void)
 		record.wind_direction = record_old.wind_direction;*/
 	}
 	
-	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%7.2f,%6.2f,%7.2f,%6.2f",
+	len = sprintf(prefix,"\"%4d-%02d-%02d %02d:%02d:%02d\",%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f,%6.2f",
 											calendar.w_year,calendar.w_month,calendar.w_date,calendar.hour,calendar.min,calendar.sec,
 											record.PM1pm,record.PM2_5pm,record.PM4pm,record.PM10pm,record.PM0_5pcm,
-											record.PM1pcm,record.PM2_5pcm,record.PM4pcm,record.PM10pcm,record.tps,
-											record.temperature, record.humidity, record.pressure/100.0,ads1220_temperature
+											record.PM1pcm,record.PM2_5pcm,record.PM4pcm,record.PM10pcm,record.tps
 											);
 	
 	prefix[len] = 0x0d;
 	prefix[len+1] = 0x0a;
-	/*ret = f_write(&cur.fsrc,prefix,len+2,&count);
+	ret = f_write(&cur.fsrc,prefix,len+2,&count);
 		if(FR_OK != ret) {
 			cur.file_flag = 0;
 			cur.line_num = 0;
@@ -548,13 +422,13 @@ void record_file_write(void)
 		} else {
 			cur.line_num++;
 			f_sync(&cur.fsrc);
-		}*/
+		}
 
 		//memcpy(&record_old, &record, sizeof(struct record_info));
 		USART_SendString(USART1,(unsigned char *)prefix);
-		if(pack_data(uart_data,record)){
+		/*if(pack_data(uart_data,record)){
 			USART_SendBuf(USART3,uart_data,25);
-		}
+		}*/
 		record_old.humidity = record.humidity;
 		record_old.temperature = record.temperature;
 		record_old.pressure = record.pressure;
@@ -570,7 +444,7 @@ void record_file_write(void)
 		record_old.tps = record.tps;
 		memset(&record, 0, sizeof(record));
 }
-/*void record_head(void)
+void record_head(void)
 {
 	int len;
 	char str[256];
@@ -582,15 +456,15 @@ void record_file_write(void)
 	str[len+1] = 0x0a;
 	len+=2;
 	
-	len += sprintf(str+len,"\"日期时间\",\"序号\",\"总辐射\",\"直接辐射\",\"散射辐射\",\"倾斜辐射\",\"PM1.0\",\"PM2.5\",\"PM4.0\",\"PM10\",\"PM0.5\",\"PM1.0\",\"PM2.5\",\"PM4.0\",\"PM10\",\"TPS\",\"空气温度\",\"空气湿度\",\"大气压力\"");
+	len += sprintf(str+len,"\"日期时间\",\"序号\",\"PM1.0\",\"PM2.5\",\"PM4.0\",\"PM10\",\"PM0.5\",\"PM1.0\",\"PM2.5\",\"PM4.0\",\"PM10\",\"TPS\",\"空气温度\",\"空气湿度\",\"大气压力\"");
 	str[len] = 0x0d;
 	str[len+1] = 0x0a;
 	len+=2;
 	
-	len += sprintf(str+len,"\"YYYY-MM-DD hh:mn:ss\",\"-\",\"W/m^2\",\"W/m^2\",\"W/m^2\",\"W/m^2\",\"m/s\",\"°\",\"℃\",\"%%\",\"hPa\"");
+	/*len += sprintf(str+len,"\"YYYY-MM-DD hh:mn:ss\",\"-\",\"W/m^2\",\"W/m^2\",\"W/m^2\",\"W/m^2\",\"m/s\",\"°\",\"℃\",\"%%\",\"hPa\"");
 	str[len] = 0x0d;
 	str[len+1] = 0x0a;
-	len+=2;
+	len+=2;*/
 	
 	ret = f_write(&cur.fsrc,str,len,&count);
 	if(FR_OK != ret) {
@@ -602,7 +476,7 @@ void record_file_write(void)
 		//cur.line_num++;
 		f_sync(&cur.fsrc);
 	}
-}*/
+}
 
 uint32_t check_config(uint8_t *data)
 {
@@ -627,7 +501,7 @@ uint32_t check_cmd(uint8_t *data)
 	}
 }
 
-uint8_t pack_data(uint8_t *data,struct record_info r)
+/*uint8_t pack_data(uint8_t *data,struct record_info r)
 {
 	uint8_t flag;
 	flag = check_record(r);
@@ -653,33 +527,9 @@ uint8_t check_between(int min, int max, float data)
 	}else{
 		return 0;
 	}
-}
-//检测风速
-uint8_t check_wind_speed(float speed)
-{
-	return check_between(0,75,speed);
-}
-//
-uint8_t check_wind_direction(float direction)
-{
-	return check_between(0,360,direction);
-}
-//
-uint8_t check_temperature(float temp)
-{
-	return check_between(-40,80,temp);
-}
-//
-uint8_t check_pressure(float pressure)
-{
-	return check_between(33000,110000,pressure);
-}
-//
-uint8_t check_humidity(float humidity)
-{
-	return check_between(0,100,humidity);
-}
-uint8_t check_record(struct record_info r)
+}*/
+
+/*uint8_t check_record(struct record_info r)
 {
 	uint8_t flag = 0;
 	flag |= check_temperature(r.temperature);
@@ -689,13 +539,7 @@ uint8_t check_record(struct record_info r)
 	//flag |= check_wind_direction(r.wind_direction)<<4;
 	
 	return flag;
-	
-	/*if(check_wind_speed(r.wind_speed) && check_wind_direction(r.wind_direction) && check_pressure(r.pressure) && check_humidity(r.humidity)&&check_temperature(r.temperature)){
-		return 1;
-	}else{
-		return 0;
-	}*/
-}
+}*/
 void RS485_send_data(void *buf,uint8_t len)
 {
 	int i;
