@@ -1,14 +1,18 @@
 #ifndef __SYS_H_
 #define __SYS_H_
 
-#include "stm32f10x.h"
+#include "stm32f10x.h"	 
+#include "typedefs.h"              // type definitions
 
-
-/***********************************************************************/
-//此程序部分来源于网络，只供学习使用，未经作者许可，不得用于其它任何用途！
-//
-/***********************************************************************/ 	 
-
+//-- Enumerations -------------------------------------------------------------
+// Error codes
+typedef enum{
+  NO_ERROR       = 0x00, // no error
+  ACK_ERROR      = 0x01, // no acknowledgment error
+  CHECKSUM_ERROR = 0x02, // checksum mismatch error
+  TIMEOUT_ERROR  = 0x04, // timeout error
+  PARM_ERROR     = 0x80, // parameter out of range error
+}etError;
 
 
 //位带操作,实现51类似的GPIO控制功能

@@ -19,7 +19,8 @@
 #include "lps22hb.h"
 #include "bsp_ads1256.h"
 #include "iwdg.h"
-#include "hyt939.h"
+//#include "hyt939.h"
+#include "sht3x.h"
 #include "ADS1220.h"
 #include "io.h"
 #include "utils.h"
@@ -65,8 +66,10 @@ struct wind_info  wind;
 //struct bme280_dev dev;
 //struct bme280_data comp_data;
 float pressure;
-double temperature;
-double humidity;
+//double temperature;
+//double humidity;
+float temperature;
+float humidity;
 
 float ads1220_temperature;
 
@@ -91,6 +94,7 @@ void RS485_send_data(void *buf,uint8_t len);
 int main(void)
 {
 	//u8 t=0,r=0;
+	etError error;
 	volatile static unsigned char tempData[3];
 	unsigned char calibrateCount = 0;
 	
@@ -110,7 +114,14 @@ int main(void)
 	//Key_Init();
 	IO_Init();
 	SPI1_Init();
+	SHT3X_Init(0x45);
 	AT24CXX_Init();
+	if(1){
+		u32t      serialNumber;// serial number
+		delay_ms(50);
+		error = SHT3x_ReadSerialNumber(&serialNumber);
+		if(error != NO_ERROR){} // do error handling here
+	}
 	
 	// Reset the ADS1220
     ADS1220_Reset();
@@ -209,7 +220,7 @@ int main(void)
 	
 	//lps22hb_init(&dev);
 	
-	HYT939_Measure_Request();
+	//HYT939_Measure_Request();
 	
 	status.cmd_send_flag = 1;
 	
@@ -289,7 +300,7 @@ int main(void)
 	
 	USART2_Init(9600); //串口2初始化
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
-	HYT939_Measure_Request();
+	//HYT939_Measure_Request();
 	IWDG_Init_2s();
 	pack_ht_data(send_htset_cmd,config_r.heat_flag);
 	RS485_send_data(send_htset_cmd,13);
@@ -391,7 +402,9 @@ int main(void)
 		//记录温湿度计信息
 		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
 			status.last_sensor = tick_count;
-			if(0==HYT939_Data_Fetch(&humidity,&temperature)) {
+			//if(0==HYT939_Data_Fetch(&humidity,&temperature)) {
+			if(NO_ERROR != SHT3X_GetTempAndHumi(&temperature, &humidity, REPEATAB_HIGH, MODE_CLKSTRETCH, 50)){
+			//if(NO_ERROR != SHT3X_GetTempAndHumi(&temperature, &humidity, REPEATAB_HIGH, MODE_POLLING, 50)){
 				if(check_humidity(humidity) && check_temperature(temperature)) {
 					record.humidity += humidity;
 					record.temperature += temperature;
@@ -400,7 +413,7 @@ int main(void)
 					record.sensor_count++;
 				}
 			}
-			HYT939_Measure_Request();
+		//	HYT939_Measure_Request();
 		}
 		IWDG_Feed();
 		if(ReadConversionData){

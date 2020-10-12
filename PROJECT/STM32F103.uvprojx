@@ -15,7 +15,7 @@
         <TargetCommonOption>
           <Device>STM32F103RE</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <PackID>Keil.STM32F1xx_DFP.1.1.0</PackID>
+          <PackID>Keil.STM32F1xx_DFP.2.2.0</PackID>
           <PackURL>http://www.keil.com/pack/</PackURL>
           <Cpu>IROM(0x08000000,0x80000) IRAM(0x20000000,0x10000) CPUTYPE("Cortex-M3") CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -373,7 +373,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\STM32_USER;..\CORE;..\STM32F10x_FWLib\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\IIC;..\HARDWARE\SPI;..\HARDWARE\LED;..\HARDWARE\SDIO;..\HARDWARE\BEEP;..\HARDWARE\USART;..\HARDWARE\IO_SPI;..\HARDWARE\W25QXX;..\MODULES\FATFS;..\MODULES\FATFS\src;..\MODULES\FATFS\src\option;..\HARDWARE\RTX;..\HARDWARE\RTC;..\HARDWARE\TIMER;..\HARDWARE\ADC;..\HARDWARE\SPI;..\HARDWARE\BME280;..\HARDWARE\ADS1256;..\HARDWARE\KEY;..\HARDWARE\24CXX;..\HARDWARE\IO_IIC;..\HARDWARE\IWDG;..\HARDWARE\HYT939;..\HARDWARE\LPS22HB;..\HARDWARE\ADS1220;..\HARDWARE\IO</IncludePath>
+              <IncludePath>..\STM32_USER;..\CORE;..\STM32F10x_FWLib\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\IIC;..\HARDWARE\SPI;..\HARDWARE\LED;..\HARDWARE\SDIO;..\HARDWARE\BEEP;..\HARDWARE\USART;..\HARDWARE\IO_SPI;..\HARDWARE\W25QXX;..\MODULES\FATFS;..\MODULES\FATFS\src;..\MODULES\FATFS\src\option;..\HARDWARE\RTX;..\HARDWARE\RTC;..\HARDWARE\TIMER;..\HARDWARE\ADC;..\HARDWARE\SPI;..\HARDWARE\BME280;..\HARDWARE\ADS1256;..\HARDWARE\KEY;..\HARDWARE\24CXX;..\HARDWARE\IO_IIC;..\HARDWARE\IWDG;..\HARDWARE\HYT939;..\HARDWARE\LPS22HB;..\HARDWARE\ADS1220;..\HARDWARE\IO;..\HARDWARE\SHT3X</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -558,6 +558,11 @@
               <FileName>io.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\IO\io.c</FilePath>
+            </File>
+            <File>
+              <FileName>sht3x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\SHT3X\sht3x.c</FilePath>
             </File>
           </Files>
         </Group>
