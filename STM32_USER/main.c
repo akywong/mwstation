@@ -114,13 +114,14 @@ int main(void)
 	//Key_Init();
 	IO_Init();
 	SPI1_Init();
-	SHT3X_Init(0x45);
+	SHT3X_Init(0x44);
 	AT24CXX_Init();
 	if(1){
 		u32t      serialNumber;// serial number
 		delay_ms(50);
 		error = SHT3x_ReadSerialNumber(&serialNumber);
-		if(error != NO_ERROR){} // do error handling here
+		if(error != NO_ERROR){
+		} // do error handling here
 	}
 	
 	// Reset the ADS1220
@@ -403,8 +404,8 @@ int main(void)
 		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
 			status.last_sensor = tick_count;
 			//if(0==HYT939_Data_Fetch(&humidity,&temperature)) {
-			if(NO_ERROR != SHT3X_GetTempAndHumi(&temperature, &humidity, REPEATAB_HIGH, MODE_CLKSTRETCH, 50)){
-			//if(NO_ERROR != SHT3X_GetTempAndHumi(&temperature, &humidity, REPEATAB_HIGH, MODE_POLLING, 50)){
+			if(NO_ERROR == SHT3X_GetTempAndHumi(&temperature, &humidity, REPEATAB_HIGH, MODE_CLKSTRETCH, 50)){
+			//if(NO_ERROR == SHT3X_GetTempAndHumi(&temperature, &humidity, REPEATAB_HIGH, MODE_POLLING, 50)){
 				if(check_humidity(humidity) && check_temperature(temperature)) {
 					record.humidity += humidity;
 					record.temperature += temperature;

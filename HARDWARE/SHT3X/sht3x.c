@@ -812,6 +812,9 @@ static void I2c_StopCondition(void)
 }
 static etError I2c_ReadByte(u8t *rxByte, etI2cAck ack, u8t timeout)
 {
-	*rxByte = SHT3X_IIC_Read_Byte(ack);
+	if(ACK == ack)
+		*rxByte = SHT3X_IIC_Read_Byte(1);
+	else
+		*rxByte = SHT3X_IIC_Read_Byte(0);
 	return NO_ERROR;
 }
