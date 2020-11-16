@@ -21,6 +21,7 @@
 #include "iwdg.h"
 #include "hyt939.h"
 #include "ADS1220.h"
+#include "ads1248.h"
 #include "io.h"
 #include "utils.h"
 #include "main.h"
@@ -110,6 +111,8 @@ int main(void)
 	//Key_Init();
 	IO_Init();
 	SPI1_Init();
+	SPI2_Init();
+	ADS1248_GPIO_Init();
 	AT24CXX_Init();
 	
 	// Reset the ADS1220
