@@ -1,8 +1,8 @@
 #ifndef __ADS1248_H_
 #define __ADS1248_H_
 
-#define SPI_ADS1248           	 SPI2
-#define SPI_ADS1248_CLK					 RCC_APB1Periph_SPI2
+//#define SPI_ADS1248           	 SPI2
+//#define SPI_ADS1248_CLK					 RCC_APB1Periph_SPI2
 
 #define ADS1248_CS_PIN        	 GPIO_Pin_12
 #define ADS1248_CS_GPIO_PORT  	 GPIOD

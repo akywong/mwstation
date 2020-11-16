@@ -365,7 +365,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\STM32_USER;..\CORE;..\STM32F10x_FWLib\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\IIC;..\HARDWARE\SPI;..\HARDWARE\LED;..\HARDWARE\SDIO;..\HARDWARE\BEEP;..\HARDWARE\USART;..\HARDWARE\IO_SPI;..\HARDWARE\W25QXX;..\MODULES\FATFS;..\MODULES\FATFS\src;..\MODULES\FATFS\src\option;..\HARDWARE\RTX;..\HARDWARE\RTC;..\HARDWARE\TIMER;..\HARDWARE\ADC;..\HARDWARE\SPI;..\HARDWARE\BME280;..\HARDWARE\ADS1256;..\HARDWARE\KEY;..\HARDWARE\24CXX;..\HARDWARE\IO_IIC;..\HARDWARE\IWDG;..\HARDWARE\HYT939;..\HARDWARE\LPS22HB;..\HARDWARE\ADS1220;..\HARDWARE\IO;..\HARDWARE\ADS1248</IncludePath>
+              <IncludePath>..\STM32_USER;..\CORE;..\STM32F10x_FWLib\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\IIC;..\HARDWARE\SPI;..\HARDWARE\LED;..\HARDWARE\SDIO;..\HARDWARE\BEEP;..\HARDWARE\USART;..\HARDWARE\IO_SPI;..\HARDWARE\W25QXX;..\MODULES\FATFS;..\MODULES\FATFS\src;..\MODULES\FATFS\src\option;..\HARDWARE\RTX;..\HARDWARE\RTC;..\HARDWARE\TIMER;..\HARDWARE\ADC;..\HARDWARE\SPI;..\HARDWARE\BME280;..\HARDWARE\ADS1256;..\HARDWARE\KEY;..\HARDWARE\24CXX;..\HARDWARE\IO_IIC;..\HARDWARE\IWDG;..\HARDWARE\HYT939;..\HARDWARE\LPS22HB;..\HARDWARE\ADS1220;..\HARDWARE\IO;..\HARDWARE\ADS1248;..\HARDWARE\AS3935</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -555,6 +555,11 @@
               <FileName>ads1248.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\ADS1248\ads1248.c</FilePath>
+            </File>
+            <File>
+              <FileName>as3935.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\AS3935\as3935.c</FilePath>
             </File>
           </Files>
         </Group>

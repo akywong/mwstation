@@ -24,6 +24,7 @@
 #include "ads1248.h"
 #include "io.h"
 #include "utils.h"
+#include "as3935.h"
 #include "main.h"
 
 float Rref = 3240.0;
