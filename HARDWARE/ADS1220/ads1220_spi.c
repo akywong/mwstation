@@ -5,8 +5,8 @@
 
 /////Ó²¼þSPI
 #define ads1220_spi_init()         SPI1_SetMode(SPI_CPOL_Low,SPI_CPHA_2Edge)
-#define ads1220_cs_h()             SPI1_ADS1220_CS_H()
-#define ads1220_cs_l()             SPI1_ADS1220_CS_L()
+#define ads1220_cs_h()             SPI_ADS1220_CS_H()
+#define ads1220_cs_l()             SPI_ADS1220_CS_L()
 #define ads1220_spi_rw_byte(x)     SPI1_ReadWriteByte(x)
 void ads1220_delay_ms(uint32_t period);
 

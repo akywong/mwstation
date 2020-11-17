@@ -19,7 +19,7 @@
 #include "lps22hb.h"
 #include "bsp_ads1256.h"
 #include "iwdg.h"
-#include "hyt939.h"
+//#include "hyt939.h"
 #include "ADS1220.h"
 #include "ads1248.h"
 #include "io.h"
@@ -53,6 +53,11 @@ struct record_info{
 	uint32_t sensor_count;
 	float pressure;
 	uint32_t press_count;
+	double ADC_value0;
+	double ADC_value1;
+	double ADC_value2;
+	double ADC_value3;
+	uint32_t ADC_count;
 	u8 flag;
 };
 struct record_info record;
@@ -112,9 +117,28 @@ int main(void)
 	//Key_Init();
 	IO_Init();
 	SPI1_Init();
-	SPI2_Init();
-	ADS1248_GPIO_Init();
+	//SPI2_Init();
+	//ADS1248_GPIO_Init();
 	AT24CXX_Init();
+	
+	if(1){
+		uint8_t ret;
+		USART1_Init(115200); //串口1初始化
+	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+		ADS1248_GPIO_Init();
+		ADS1248SetGain(3);
+		for(;;){
+			ret = ADS1248GetGain();
+			printf("get gain：%d\n",ret);
+		}
+		return 0;
+	}
+	
+	
+	bsp_InitADS1256();
+	
+	ADS1256_CfgADC((ADS1256_GAIN_E)3, ADS1256_5SPS);
+	ADS1256_StartScan(1);
 	
 	// Reset the ADS1220
     ADS1220_Reset();
@@ -213,7 +237,7 @@ int main(void)
 	
 	//lps22hb_init(&dev);
 	
-	HYT939_Measure_Request();
+	//HYT939_Measure_Request();
 	
 	status.cmd_send_flag = 1;
 	
@@ -293,7 +317,7 @@ int main(void)
 	
 	USART2_Init(9600); //串口2初始化
 	USART_ITConfig(USART2, USART_IT_IDLE, ENABLE);
-	HYT939_Measure_Request();
+	//HYT939_Measure_Request();
 	IWDG_Init_2s();
 	pack_ht_data(send_htset_cmd,config_r.heat_flag);
 	RS485_send_data(send_htset_cmd,13);
@@ -395,7 +419,7 @@ int main(void)
 		//记录温湿度计信息
 		if(((tick_count - status.last_sensor) >400) || (tick_count < status.last_sensor)) {
 			status.last_sensor = tick_count;
-			if(0==HYT939_Data_Fetch(&humidity,&temperature)) {
+			/*if(0==HYT939_Data_Fetch(&humidity,&temperature)) {
 				if(check_humidity(humidity) && check_temperature(temperature)) {
 					record.humidity += humidity;
 					record.temperature += temperature;
@@ -404,7 +428,22 @@ int main(void)
 					record.sensor_count++;
 				}
 			}
-			HYT939_Measure_Request();
+			HYT939_Measure_Request();*/
+		}
+		IWDG_Feed();
+		//??AD????
+		if(((tick_count - status.last_adc) > 400) || (tick_count < status.last_adc)) {
+			status.last_adc = tick_count;
+			record.ADC_value0 += (double)ADS1256_GetAdc(0);
+			record.ADC_value1 += (double)ADS1256_GetAdc(1);
+			record.ADC_value2 += (double)ADS1256_GetAdc(2);
+			record.ADC_value3 += (double)ADS1256_GetAdc(3);
+			record.ADC_count++;
+			if(ADS1256_GetAdc(8)) {
+				//USART_SendString(USART1," ADS1256 RESET\r\n");
+				ADS1256_CfgADC((ADS1256_GAIN_E)config_r.ad_gain, ADS1256_5SPS);
+				ADS1256_StartScan(1);	
+			}
 		}
 		IWDG_Feed();
 		if(ReadConversionData){
@@ -412,6 +451,8 @@ int main(void)
 			ads1220_temperature = ADS1220_Get_Temperature();
 			ADS1220_Start ();
 		}
+		
+		
 		//写文件
 		IWDG_Feed();
 		if(((new_record_count - status.last_record_tick) >= record_interval[config_r.freq]) || (new_record_count < status.last_record_tick)){

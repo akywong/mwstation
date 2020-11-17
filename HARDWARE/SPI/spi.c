@@ -120,7 +120,7 @@ void SPI2_Init(void)
   SPI_InitTypeDef  SPI_InitStructure;
 	 
 	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOD|RCC_APB1Periph_SPI2|RCC_APB2Periph_GPIOB, ENABLE );//PORTB,PORTD，SPI1时钟使能 
-	RCC_APB2PeriphClockCmd(	RCC_APB1Periph_SPI2, ENABLE );
+	RCC_APB1PeriphClockCmd(	RCC_APB1Periph_SPI2, ENABLE );
 	
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;                 //PD13.14.15复用推挽  

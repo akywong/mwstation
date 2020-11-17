@@ -10,21 +10,21 @@ extern unsigned char ReadConversionData;
 #define IO_TOGGLE(x)  x^=1
 /****************************** end *********************************/
 
-#define CONFIG_GPIO     GPIOA
+/*#define CONFIG_GPIO     GPIOA
 #define CONFIG_PIN			GPIO_Pin_1
 #define CONFIG_IO_RCC_CLK RCC_APB2Periph_GPIOA
-#define CONFIG_IO_GET_IN()  (0)//((CONFIG_GPIO->IDR & CONFIG_PIN)?(1):(0))
+#define CONFIG_IO_GET_IN()  (0)//((CONFIG_GPIO->IDR & CONFIG_PIN)?(1):(0))*/
 
 //ADS1220 RDY ÖÐ¶Ï
-#define ADS1220_DRY_RCC_CLK  RCC_APB2Periph_GPIOC
-#define ADS1220_DRY_GPIO GPIOC
-#define ADS1220_DRY_PIN GPIO_Pin_1
+#define ADS1220_DRY_RCC_CLK  RCC_APB2Periph_GPIOG
+#define ADS1220_DRY_GPIO GPIOG
+#define ADS1220_DRY_PIN GPIO_Pin_4
 #define ADS1220_DRY_GET_IN()  ((ADS1220_DRY_GPIO->IDR & ADS1220_DRY_PIN)?(1):(0))
 
 //LPS22HB DRY
-#define LPS22HB_DRY_RCC_CLK  RCC_APB2Periph_GPIOC
-#define LPS22HB_DRY_GPIO GPIOC
-#define LPS22HB_DRY_PIN GPIO_Pin_4
+#define LPS22HB_DRY_RCC_CLK  RCC_APB2Periph_GPIOG
+#define LPS22HB_DRY_GPIO GPIOG
+#define LPS22HB_DRY_PIN GPIO_Pin_7
 #define LPS22HB_DRY_GET_IN()  ((LPS22HB_DRY_GPIO->IDR & LPS22HB_DRY_PIN)?(1):(0))
 
 /************************* º¯ÊýÉùÃ÷ *********************************/

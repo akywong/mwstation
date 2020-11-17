@@ -5,8 +5,8 @@
 
 /////Ó²¼þSPI
 #define lps22hb_spi_init()         SPI1_SetMode(SPI_CPOL_High,SPI_CPHA_2Edge)
-#define lps22hb_cs_h()             SPI1_CS_H()
-#define lps22hb_cs_l()             SPI1_CS_L()
+#define lps22hb_cs_h()             SPI_LPS22HB_CS_H()
+#define lps22hb_cs_l()             SPI_LPS22HB_CS_L()
 #define lps22hb_spi_rw_byte(x)     SPI1_ReadWriteByte(x)
 
 int32_t lps22hb_spi_read(void *handle,u8 addr, u8 *data, uint16_t count)
