@@ -30,7 +30,19 @@ void ADS1248_GPIO_Init(void){
 	GPIO_InitStructure.GPIO_Pin = ADS1248_RESET_GPIO_PIN;		
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 	
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
-	GPIO_Init(ADS1248_RESET_GPIO_PORT, &GPIO_InitStructure);		
+	GPIO_Init(ADS1248_RESET_GPIO_PORT, &GPIO_InitStructure);	
+
+	//SEL0
+	GPIO_InitStructure.GPIO_Pin = ADS1248_SEL0_GPIO_PIN;		
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 	
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
+	GPIO_Init(ADS1248_SEL0_GPIO_PORT, &GPIO_InitStructure);	
+	
+	//SEL1
+	GPIO_InitStructure.GPIO_Pin = ADS1248_SEL1_GPIO_PIN;		
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 	
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
+	GPIO_Init(ADS1248_SEL1_GPIO_PORT, &GPIO_InitStructure);
 	
 	/*Delay20ms();
   ADS1248_DISABLE();
