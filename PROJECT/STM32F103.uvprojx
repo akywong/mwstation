@@ -574,6 +574,11 @@
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\ADS1256\bsp_ads1256.c</FilePath>
             </File>
+            <File>
+              <FileName>RTD_Math_ads1248.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\ADS1248\RTD_Math_ads1248.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

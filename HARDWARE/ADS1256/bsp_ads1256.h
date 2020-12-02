@@ -22,25 +22,29 @@
 	#define PORT_DIN	GPIOB
 	#define PIN_DIN		GPIO_Pin_15
 
-	#define RCC_CS 		RCC_APB2Periph_GPIOD
-	#define PORT_CS		GPIOD
-	#define PIN_CS		GPIO_Pin_13
+	#define RCC_CS 		RCC_APB2Periph_GPIOE
+	#define PORT_CS		GPIOE
+	#define PIN_CS		GPIO_Pin_8
 
-	#define RCC_DRDY 	RCC_APB2Periph_GPIOA
-	#define PORT_DRDY	GPIOA
-	#define PIN_DRDY	GPIO_Pin_3
+	#define RCC_DRDY 	RCC_APB2Periph_GPIOE
+	#define PORT_DRDY	GPIOE
+	#define PIN_DRDY	GPIO_Pin_7
 
 	#define RCC_DOUT 	RCC_APB2Periph_GPIOB
 	#define PORT_DOUT	GPIOB
 	#define PIN_DOUT	GPIO_Pin_14
 
-	#define RCC_SYNC 	RCC_APB2Periph_GPIOD
-	#define PORT_SYNC	GPIOD
-	#define PIN_SYNC	GPIO_Pin_11
+	#define RCC_SYNC 	RCC_APB2Periph_GPIOE
+	#define PORT_SYNC	GPIOE
+	#define PIN_SYNC	GPIO_Pin_10
 	
-	#define RCC_RST 	RCC_APB2Periph_GPIOD
-	#define PORT_RST	GPIOD
-	#define PIN_RST		GPIO_Pin_12
+	#define RCC_RST 	RCC_APB2Periph_GPIOE
+	#define PORT_RST	GPIOE
+	#define PIN_RST		GPIO_Pin_9
+	
+	#define RCC_POWERDOWN RCC_APB2Periph_GPIOE
+	#define PORT_POWERDOWN GPIOE
+	#define PIN_POWERDOWN GPIO_Pin_10
 //RST->HIGH	PC13
 //SYNC->HIGH PC8
 	/* 定义口线置0和置1的宏 */
@@ -58,6 +62,10 @@
 	
 	#define RST_0()		GPIO_ResetBits(PORT_RST, PIN_RST)
 	#define RST_1()		GPIO_SetBits(PORT_RST, PIN_RST)
+	
+	#define POWERDOWN_0()		GPIO_ResetBits(PORT_POWERDOWN, PIN_POWERDOWN)
+	#define POWERDOWN_1()		GPIO_SetBits(PORT_POWERDOWN, PIN_POWERDOWN)
+	
 
 	#define DO_IS_HIGH()	(GPIO_ReadInputDataBit(PORT_DOUT, PIN_DOUT) == Bit_SET)
 

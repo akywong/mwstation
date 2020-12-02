@@ -15,8 +15,8 @@
 #endif
 #define AS3935_DELAY(n)   delay_ms(n)
 
-#define AS3935_CMD_RREG         0x00
-#define AS3935_CMD_WREG	        0x40
+#define AS3935_CMD_WREG         0x00
+#define AS3935_CMD_RREG	        0x40
 #define AS3935_DISABLE()        GPIO_SetBits(AS3935_CS_GPIO_PORT, AS3935_CS_PIN)
 #define AS3935_ENABLE()         GPIO_ResetBits(AS3935_CS_GPIO_PORT, AS3935_CS_PIN)
 	
@@ -48,7 +48,7 @@ volatile uint16_t Overflow_cnt=0;
 	}
 */
 
-void AS3935_init(void)
+void AS3935_io_init(void)
 {
 	GPIO_InitTypeDef  GPIO_InitStructure; 
 	
@@ -313,7 +313,7 @@ uint8_t tuneAntena (void)
 	// each capacitor changes second least significant digit
 	// using this timing so this is probably the best way to go
 	sei();
-	start();*/
+	//start();*/
 	registerWrite(AS3935_LCO_FDIV,0);
 	registerWrite(AS3935_DISP_LCO,1);
 	// tuning is not linear, can't do any shortcuts here

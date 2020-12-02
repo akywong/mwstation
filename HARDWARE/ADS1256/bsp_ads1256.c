@@ -141,7 +141,7 @@ void bsp_InitADS1256(void)
 
 
 	/* 打开GPIO时钟 */
-	RCC_APB2PeriphClockCmd(RCC_SCK | RCC_DIN | RCC_DOUT | RCC_CS | RCC_DRDY, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_SCK | RCC_DIN | RCC_DOUT | RCC_CS | RCC_DRDY|RCC_SYNC, ENABLE);
 
 	/* 配置几个推完输出IO */
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;	/* 设为推挽输出口 */
@@ -736,18 +736,18 @@ void ADS1256_StartScan(uint8_t _ucScanMode)
 	/* Enable AFIO clock */
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 
-	/* Connect EXTI3 Line to PE3 pin */
-	GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource3);
+	/* Connect EXTI7 Line to PE7 pin */
+	GPIO_EXTILineConfig(GPIO_PortSourceGPIOE, GPIO_PinSource7);
 
-	/* Configure EXTI3 line */
-	EXTI_InitStructure.EXTI_Line = EXTI_Line3;
+	/* Configure EXTI7 line */
+	EXTI_InitStructure.EXTI_Line = EXTI_Line7;
 	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
 	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;  /* 下降沿 */
 	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 	EXTI_Init(&EXTI_InitStructure);
 
-	/* Enable and set EXTI3 Interrupt  priority */
-	NVIC_InitStructure.NVIC_IRQChannel = EXTI3_IRQn;
+	/* Enable and set EXTI7 Interrupt  priority */
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x03;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
@@ -884,22 +884,22 @@ void ADS1256_ISR(void)
 
 /*
 *********************************************************************************************************
-*	函 数 名: EXTI3_IRQHandler
+*	函 数 名: EXTI9_5_IRQHandler
 *	功能说明: 外部中断服务程序.
 *	形    参：无
 *	返 回 值: 无
 *********************************************************************************************************
 */
-void EXTI3_IRQHandler(void)
+void EXTI9_5_IRQHandler(void)
 {
-	if (EXTI_GetITStatus(EXTI_Line3) != RESET)
+	if (EXTI_GetITStatus(EXTI_Line7) != RESET)
 	{
-		EXTI_ClearITPendingBit(EXTI_Line3);		/* 清除中断标志位 */
+		EXTI_ClearITPendingBit(EXTI_Line7);		/* 清除中断标志位 */
 
 		ADS1256_ISR();
 
 		/* 执行上面的代码完毕后，再次清零中断标志 */
-		EXTI_ClearITPendingBit(EXTI_Line3);		/* 清除中断标志位 */
+		EXTI_ClearITPendingBit(EXTI_Line7);		/* 清除中断标志位 */
 	}
 }
 

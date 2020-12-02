@@ -119,7 +119,7 @@ void SPI2_Init(void)
  	GPIO_InitTypeDef GPIO_InitStructure;
   SPI_InitTypeDef  SPI_InitStructure;
 	 
-	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOD|RCC_APB1Periph_SPI2|RCC_APB2Periph_GPIOB, ENABLE );//PORTB,PORTD，SPI1时钟使能 
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOG|RCC_APB2Periph_GPIOD|RCC_APB2Periph_GPIOB, ENABLE );//PORTB,PORTD，SPI1时钟使能 
 	RCC_APB1PeriphClockCmd(	RCC_APB1Periph_SPI2, ENABLE );
 	
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
@@ -127,15 +127,46 @@ void SPI2_Init(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
- 	GPIO_SetBits(GPIOB,GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15); //PA5.6.7上拉
+ 	GPIO_SetBits(GPIOB,GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15); 
 	
-	//CS管脚初始化  PD12
+	//ads1248片选
 	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOD, ENABLE );//PORTD时钟使能 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;        // PD12 推挽 
  	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
  	GPIO_Init(GPIOD, &GPIO_InitStructure);
  	GPIO_SetBits(GPIOD,GPIO_Pin_12);
+	//as3935片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOD, ENABLE );//PORTD时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;        // PD12 推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOD, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOD,GPIO_Pin_0);
+	
+	//ads1220片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOG, ENABLE );//PORTG时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;        // PG3推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOG, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOG,GPIO_Pin_3);
+	
+	//lps22hb片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOG, ENABLE );//PORTD时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;        // PG8 推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOG, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOG,GPIO_Pin_8);
+	
+	//ADS1256片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOE, ENABLE );//PORTD时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;        // PE8 推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOE, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOE,GPIO_Pin_8);
 	
 			
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;  //设置SPI单向或者双向的数据模式:SPI设置为双线双向全双工

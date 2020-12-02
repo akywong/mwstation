@@ -4,8 +4,8 @@
  *  Created on: 7 lip 2016
  *      Author: Jacek
  */
-#ifndef AS3935_AS3935_H_
-#define AS3935_AS3935_H_
+#ifndef _AS3935_H_
+#define _AS3935_H_
 
 #include <stdint.h>
 
@@ -13,18 +13,15 @@
 #define AS3935_CS_GPIO_PORT  	 GPIOD
 #define AS3935_CS_GPIO_CLK   	 RCC_APB2Periph_GPIOD
 
-#define RF_PORT		PORTB
+/*#define RF_PORT		PORTB
 #define RF_DDR		DDRB
 #define RF_PIN		PINB
 #define SDI		5	// MOSI	- wyjœcie
 #define SCK		7	// SCK
 #define CS		4	// SS
-#define SDO		6	// MISO	- wejœcie
+#define SDO		6	*/// MISO	- wejœcie
 
-void Perip_Init(void);
-void Timer_init(void);
 void Thunder_Init(void);
-uint8_t  Thunder_Read(uint8_t);
 uint8_t lightningDistanceKm(void);
 uint8_t setSpikeRejection(uint8_t);
 uint8_t getSpikeRejection(void);
@@ -36,9 +33,9 @@ uint8_t interruptSource(void);
 uint8_t tuneAntena (void);
 uint32_t  millis(void);
 
-#define IRQ_PORT	PORTB
+/*#define IRQ_PORT	PORTB
 #define IRQ_DIR		DDRB
-#define IRQ_PIN 	(1<<PB2)
+#define IRQ_PIN 	(1<<PB2)*/
 // register access macros - register address, bitmask
 // register access macros - register address, bitmask
 #define AS3935_AFE_GB		0x00, 0x3E

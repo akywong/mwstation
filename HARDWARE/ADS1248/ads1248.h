@@ -22,6 +22,24 @@
 
 #define ADS1248_DISABLE()        GPIO_SetBits(ADS1248_CS_GPIO_PORT, ADS1248_CS_PIN)
 #define ADS1248_ENABLE()         GPIO_ResetBits(ADS1248_CS_GPIO_PORT, ADS1248_CS_PIN)
+
+//
+#define ADS1248_SEL1_GPIO_PIN   GPIO_Pin_14
+#define ADS1248_SEL1_GPIO_PORT  GPIOD
+#define ADS1248_SEL1_GPIO_CLK   RCC_APB2Periph_GPIOD
+
+//
+#define ADS1248_SEL0_GPIO_PIN   GPIO_Pin_15
+#define ADS1248_SEL0_GPIO_PORT  GPIOD
+#define ADS1248_SEL0_GPIO_CLK   RCC_APB2Periph_GPIOD
+
+#define ADS1248_SET_SEL0()    GPIO_SetBits(ADS1248_SEL0_GPIO_PORT,ADS1248_SEL0_GPIO_PIN)
+#define ADS1248_RESET_SEL0()  GPIO_ResetBits(ADS1248_SEL0_GPIO_PORT,ADS1248_SEL0_GPIO_PIN)
+
+#define ADS1248_SET_SEL1()    GPIO_SetBits(ADS1248_SEL0_GPIO_PORT,ADS1248_SEL0_GPIO_PIN)
+#define ADS1248_RESET_SEL1()  GPIO_ResetBits(ADS1248_SEL0_GPIO_PORT,ADS1248_SEL0_GPIO_PIN)
+
+
 //Conversion start
 #define ADS1248_START_GPIO_PIN   GPIO_Pin_13
 #define ADS1248_START_GPIO_PORT  GPIOD
@@ -385,6 +403,8 @@ unsigned char ADS1248GetGPIO(void);
 /* Miscellaneous Commands */
 int ADS1248RDATACRead(void);		// reads data directly based on RDATAC mode (writes NOP) and 32 SCLKs
 int ADS1248RDATARead(void); 
+
+float ADS1248_Get_Temperature(void);
 
 void Delay1us(void);
 void Delay10us(void);

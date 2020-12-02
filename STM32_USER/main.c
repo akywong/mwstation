@@ -25,6 +25,7 @@
 #include "io.h"
 #include "utils.h"
 #include "as3935.h"
+#include "bsp_ads1256.h"
 #include "main.h"
 
 float Rref = 3240.0;
@@ -116,29 +117,70 @@ int main(void)
 	LED_Init();
 	//Key_Init();
 	IO_Init();
-	SPI1_Init();
-	//SPI2_Init();
+	//SPI1_Init();
+	SPI2_Init();
 	//ADS1248_GPIO_Init();
 	AT24CXX_Init();
+	if(0){
+		Thunder_Init();
+	}
 	
+	if(0){
+		USART1_Init(115200); //串口1初始化
+	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+		bsp_InitADS1256();
+		if(1){
+			uint8_t id = ADS1256_ReadChipID();
+			printf("ads1256 id = %d\n",id);
+		}
+		ADS1256_CfgADC(ADS1256_GAIN_64, ADS1256_5SPS);
+		ADS1256_StartScan(1);	
+		while(1){
+			delay_ms(500);
+			printf("channel 1 :%f\n",(double)ADS1256_GetAdc(0));
+			printf("channel 2 :%f\n",(double)ADS1256_GetAdc(1));
+			printf("channel 3 :%f\n",(double)ADS1256_GetAdc(2));
+			printf("channel 4 :%f\n",(double)ADS1256_GetAdc(4));
+			printf("channel 5 :%f\n",(double)ADS1256_GetAdc(5));
+			
+			if(ADS1256_GetAdc(8)) {
+				printf(" ADS1256 RESET\r\n");
+				ADS1256_CfgADC(ADS1256_GAIN_64, ADS1256_5SPS);
+				ADS1256_StartScan(1);	
+			}
+		}
+		return 0;
+	}
 	if(1){
 		uint8_t ret;
 		USART1_Init(115200); //串口1初始化
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 		ADS1248_GPIO_Init();
+		ADS1248_SET_SEL0();
+		ADS1248_SET_SEL1();
+		ADS1248SetChannel(0,0);
+		ADS1248SetChannel(1,1);
+		ADS1248SetVoltageReference(1);
 		ADS1248SetGain(3);
+		ADS1248SetDataRate(2);
+		ADS1248SetCurrentDACOutput(3);
+		ADS1248SetDRDYMode(0);
+		ADS1248SetIDACRouting(0,8);
+		ADS1248SetIDACRouting(1,9);
 		for(;;){
 			ret = ADS1248GetGain();
 			printf("get gain：%d\n",ret);
+			delay_ms(200);
+			printf("%f\n",ADS1248_Get_Temperature());
 		}
 		return 0;
 	}
 	
 	
-	bsp_InitADS1256();
+	//bsp_InitADS1256();
 	
-	ADS1256_CfgADC((ADS1256_GAIN_E)3, ADS1256_5SPS);
-	ADS1256_StartScan(1);
+	//ADS1256_CfgADC((ADS1256_GAIN_E)3, ADS1256_5SPS);
+	//ADS1256_StartScan(1);
 	
 	// Reset the ADS1220
     ADS1220_Reset();

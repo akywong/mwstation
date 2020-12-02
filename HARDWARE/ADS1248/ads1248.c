@@ -1,4 +1,5 @@
 #include "spi.h"
+#include "RTD_Math_ads1248.h"
 #include "ads1248.h"
 #include "delay.h"
 
@@ -1085,4 +1086,13 @@ unsigned char Ads_Calibrate(unsigned int Gain)
 	//	fsc =ADS1248GetFSC();
 
     return R;
+}
+float ADS1248_Get_Temperature(void)
+{
+	int code;
+	ADS1248SendRDATAC();
+	
+	code = ADS1248RDATACRead();
+	//delay_ms(10);
+	return (ads1248_interpolateTemperatureValue(code));
 }
