@@ -153,15 +153,23 @@ void SPI2_Init(void)
  	GPIO_SetBits(GPIOG,GPIO_Pin_3);
 	
 	//lps22hb片选
-	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOG, ENABLE );//PORTD时钟使能 
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOG, ENABLE );//PORTG时钟使能 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;        // PG8 推挽 
  	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
  	GPIO_Init(GPIOG, &GPIO_InitStructure);
  	GPIO_SetBits(GPIOG,GPIO_Pin_8);
 	
+	//PCAP01片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOG, ENABLE );//PORTG时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;        // PG6 推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOG, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOG,GPIO_Pin_6);
+	
 	//ADS1256片选
-	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOE, ENABLE );//PORTD时钟使能 
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOE, ENABLE );//PORTE时钟使能 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;        // PE8 推挽 
  	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
