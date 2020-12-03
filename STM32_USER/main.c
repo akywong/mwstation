@@ -156,8 +156,7 @@ int main(void)
 		USART1_Init(115200); //´®¿Ú1³õÊ¼»¯
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 		ADS1248_GPIO_Init();
-		ADS1248_SET_SEL0();
-		ADS1248_SET_SEL1();
+		ADS1248_channel_select(1);
 		ADS1248SetChannel(ADS1248_AINP0,ADS1248_AINN1);//(P,N)
 		ADS1248SetVoltageReference(ADS1248_REF1);
 		ADS1248SetGain(ADS1248_GAIN_8);

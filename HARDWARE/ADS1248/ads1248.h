@@ -426,6 +426,8 @@ int ADS1248RDATARead(void);
 
 float ADS1248_Get_Temperature(void);
 
+void  ADS1248_channel_select(int ch);
+
 void Delay1us(void);
 void Delay10us(void);
 void Delay200us(void);

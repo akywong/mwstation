@@ -62,6 +62,33 @@ void ADS1248_GPIO_Init(void){
 	ADS1248_RST_H();
 	Delay10ms(); 
 }
+
+void  ADS1248_channel_select(int ch)
+{
+	switch(ch){
+		case 1:
+			ADS1248_RESET_SEL0();
+		  ADS1248_RESET_SEL1();
+	  break;
+		case 2:
+			ADS1248_SET_SEL0();
+			ADS1248_RESET_SEL1();
+		break;
+		case 3:
+			ADS1248_RESET_SEL0();
+			ADS1248_SET_SEL1();
+		break;
+		case 4:
+			ADS1248_SET_SEL0();
+			ADS1248_SET_SEL1();
+		break;
+		default:
+			ADS1248_RESET_SEL0();
+		  ADS1248_RESET_SEL1();
+		break;
+	}
+	return;
+}
  
 static unsigned char ADS1248_SPI_SendByte(unsigned char byte){
 #ifdef ADS1248_SPI2
