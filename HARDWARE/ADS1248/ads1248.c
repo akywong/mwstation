@@ -250,75 +250,13 @@ int ADS1248SetBurnOutSource(int BurnOut)
 	return dError;
 }
 
-int ADS1248SetChannel(int vMux, int pMux){
+int ADS1248SetChannel(int pMux, int nMux){
 	unsigned int Temp;
 	int dError = ADS1248_NO_ERROR;
 	ADS1248ReadRegister(ADS1248_0_MUX0, 0x01, &Temp);
-	if (pMux==1) {
-		Temp &= 0xf8;
-		switch(vMux) {
-			case 0:
-				Temp |= ADS1248_AINN0;
-				break;
-			case 1:
-				Temp |= ADS1248_AINN1;
-				break;
-			case 2:
-				Temp |= ADS1248_AINN2;
-				break;
-			case 3:
-				Temp |= ADS1248_AINN3;
-				break;
-			case 4:
-				Temp |= ADS1248_AINN4;
-				break;
-			case 5:
-				Temp |= ADS1248_AINN5;
-				break;
-			case 6:
-				Temp |= ADS1248_AINN6;
-				break;
-			case 7:
-				Temp |= ADS1248_AINN7;
-				break;
-			default:
-				Temp |= ADS1248_AINN0;
-				dError = ADS1248_ERROR;
-		}
-
-	} 
-	else {
-		Temp &= 0xc7;
-		switch(vMux) {
-			case 0:
-				Temp |= ADS1248_AINP0;
-				break;
-			case 1:
-				Temp |= ADS1248_AINP1;
-				break;
-			case 2:
-				Temp |= ADS1248_AINP2;
-				break;
-			case 3:
-				Temp |= ADS1248_AINP3;
-				break;
-			case 4:
-				Temp |= ADS1248_AINP4;
-				break;
-			case 5:
-				Temp |= ADS1248_AINP5;
-				break;
-			case 6:
-				Temp |= ADS1248_AINP6;
-				break;
-			case 7:
-				Temp |= ADS1248_AINP7;
-				break;
-			default:
-				Temp |= ADS1248_AINP0;
-				dError = ADS1248_ERROR;
-		}
-	}
+	Temp &= 0xC0;
+	Temp |= (nMux&0x07);
+	Temp |= (pMux&0x07)<<3;
 	// write the register value containing the new value back to the ADS
 	ADS1248WriteRegister(ADS1248_0_MUX0, 0x01, &Temp); 
 	return dError;
@@ -383,23 +321,7 @@ int ADS1248SetVoltageReference(int VoltageRef)
 	int dError = ADS1248_NO_ERROR;
 	ADS1248ReadRegister(ADS1248_2_MUX1, 0x01, &temp);
 	temp &= 0xe7;
-	switch(VoltageRef) {
-		case 0:
-			temp |= ADS1248_REF0;
-			break;
-		case 1:
-			temp |= ADS1248_REF1;
-			break;
-		case 2:
-			temp |= ADS1248_INT;
-			break;
-		case 3:
-			temp |= ADS1248_INT_REF0;
-			break;
-		default:
-			temp |= ADS1248_REF0;
-			dError = ADS1248_ERROR;
-	}
+	temp |= (VoltageRef&3)<<3;
 	// write the register value containing the new value back to the ADS
 	ADS1248WriteRegister(ADS1248_2_MUX1, 0x01, &temp);
 	return dError;
@@ -452,38 +374,10 @@ int ADS1248SetGain(int Gain)
 	int dError = ADS1248_NO_ERROR;
 	ADS1248ReadRegister(ADS1248_3_SYS0, 0x01, &Temp);
 	Temp &= 0x0f;
-	switch(Gain) {
-		case 0:
-			Temp |= ADS1248_GAIN_1;
-			break;
-		case 1:
-			Temp |= ADS1248_GAIN_2;
-			break;
-		case 2:
-			Temp |= ADS1248_GAIN_4;
-			break;
-		case 3:
-			Temp |= ADS1248_GAIN_8;
-			break;
-		case 4:
-			Temp |= ADS1248_GAIN_16;
-			break;
-		case 5:
-			Temp |= ADS1248_GAIN_32;
-			break;
-		case 6:
-			Temp |= ADS1248_GAIN_64;
-			break;
-		case 7:
-			Temp |= ADS1248_GAIN_128;
-			break;
-		default:
-			Temp |= ADS1248_GAIN_1;
-			dError = ADS1248_ERROR;
-		}
-		// write the register value containing the new value back to the ADS
-		ADS1248WriteRegister(ADS1248_3_SYS0, 0x01, &Temp);
-		return dError;
+	Temp |= (Gain&7)<<4;
+	// write the register value containing the new value back to the ADS
+	ADS1248WriteRegister(ADS1248_3_SYS0, 0x01, &Temp);
+	return dError;
 }
 
 int ADS1248SetDataRate(int DataRate)
@@ -492,47 +386,7 @@ int ADS1248SetDataRate(int DataRate)
 	int dError = ADS1248_NO_ERROR;
 	ADS1248ReadRegister(ADS1248_3_SYS0, 0x01, &Temp);
 	Temp &= 0x70;
-	switch(DataRate) {
-		case 0:
-			Temp |= ADS1248_DR_5;
-			break;
-		case 1:
-			Temp |= ADS1248_DR_10;
-			break;
-		case 2:
-			Temp |= ADS1248_DR_20;
-			break;
-		case 3:
-			Temp |= ADS1248_DR_40;
-			break;
-		case 4:
-			Temp |= ADS1248_DR_80;
-			break;
-		case 5:
-			Temp |= ADS1248_DR_160;
-			break;
-		case 6:
-			Temp |= ADS1248_DR_320;
-			break;
-		case 7:
-			Temp |= ADS1248_DR_640;
-			break;
-		case 8:
-			Temp |= ADS1248_DR_1000;
-			break;
-		case 9:
-		case 10:
-		case 11:
-		case 12:
-		case 13:
-		case 14:
-		case 15:
-			Temp |= ADS1248_DR_2000;
-			break;
-		default:
-			Temp |= ADS1248_DR_5;
-			dError = ADS1248_ERROR;
-	}
+	Temp |= (DataRate&0xF);
 	// write the register value containing the new value back to the ADS
 	ADS1248WriteRegister(ADS1248_3_SYS0, 0x01, &Temp);
 	return dError;
@@ -574,17 +428,7 @@ int ADS1248SetDRDYMode(int DRDYMode)
 	int dError = ADS1248_NO_ERROR;
 	ADS1248ReadRegister(ADS1248_10_IDAC0, 0x01, &Temp);
 	Temp &= 0xf7;
-	switch(DRDYMode) {
-		case 0:
-			Temp |= ADS1248_DRDY_OFF;
-			break;
-		case 1:
-			Temp |= ADS1248_DRDY_ON;
-			break;
-		default:
-			Temp |= ADS1248_DRDY_OFF;
-			dError = ADS1248_ERROR;
-	}
+	Temp |= (DRDYMode&1)<<3;
 	// write the register value containing the new value back to the ADS
 	ADS1248WriteRegister(ADS1248_10_IDAC0, 0x01, &Temp);
 	return dError;
@@ -596,145 +440,19 @@ int ADS1248SetCurrentDACOutput(int CurrentOutput)
 	int dError = ADS1248_NO_ERROR;
 	ADS1248ReadRegister(ADS1248_10_IDAC0, 0x01, &Temp);
 	Temp &= 0xf8;
-	switch(CurrentOutput) {
-		case 0:
-			Temp |= ADS1248_IDAC_OFF;
-			break;
-		case 1:
-			Temp |= ADS1248_IDAC_50;
-			break;
-		case 2:
-			Temp |= ADS1248_IDAC_100;
-			break;
-		case 3:
-			Temp |= ADS1248_IDAC_250;
-			break;
-		case 4:
-			Temp |= ADS1248_IDAC_500;
-			break;
-		case 5:
-			Temp |= ADS1248_IDAC_750;
-			break;
-		case 6:
-			Temp |= ADS1248_IDAC_1000;
-			break;
-		case 7:
-			Temp |= ADS1248_IDAC_1500;
-			break;
-		default:
-			Temp |= ADS1248_IDAC_OFF;
-			dError = ADS1248_ERROR;
-	}
+	Temp |= (CurrentOutput&0x7);
 	// write the register value containing the new value back to the ADS
 	ADS1248WriteRegister(ADS1248_10_IDAC0, 0x01, &Temp);
 	return dError;
 }
 // Relate to IDAC1
-int ADS1248SetIDACRouting(int IDACroute, int IDACdir)		// IDACdir (0 = I1DIR, 1 = I2DIR)
+int ADS1248SetIDACRouting(int I1dir, int I2dir)
 {
-	unsigned int Temp;
+	unsigned int Temp=0;
 	int dError = ADS1248_NO_ERROR;
-	ADS1248ReadRegister(ADS1248_11_IDAC1, 0x01, &Temp);
-	if (IDACdir>0){
-		Temp &= 0xf0;
-		switch(IDACroute) {
-			case 0:
-				Temp |= ADS1248_IDAC2_A0;
-				break;
-			case 1:
-				Temp |= ADS1248_IDAC2_A1;
-				break;
-			case 2:
-				Temp |= ADS1248_IDAC2_A2;
-				break;
-			case 3:
-				Temp |= ADS1248_IDAC2_A3;
-				break;
-			case 4:
-				Temp |= ADS1248_IDAC2_A4;
-				break;
-			case 5:
-				Temp |= ADS1248_IDAC2_A5;
-				break;
-			case 6:
-				Temp |= ADS1248_IDAC2_A6;
-				break;
-			case 7:
-				Temp |= ADS1248_IDAC2_A7;
-				break;
-			case 8:
-				Temp |= ADS1248_IDAC2_EXT1;
-				break;
-			case 9:
-				Temp |= ADS1248_IDAC2_EXT2;
-				break;
-			case 10:
-				Temp |= ADS1248_IDAC2_EXT1;
-				break;
-			case 11:
-				Temp |= ADS1248_IDAC2_EXT2;
-				break;
-			case 12:
-			case 13:
-			case 14:
-			case 15:
-				Temp |= ADS1248_IDAC2_OFF;
-				break;
-			default:
-				Temp |= ADS1248_IDAC2_OFF;
-				dError = ADS1248_ERROR;
-		}
-
-	} else {
-		Temp &= 0x0f;
-		switch(IDACroute) {
-			case 0:
-				Temp |= ADS1248_IDAC1_A0;
-				break;
-			case 1:
-				Temp |= ADS1248_IDAC1_A1;
-				break;
-			case 2:
-				Temp |= ADS1248_IDAC1_A2;
-				break;
-			case 3:
-				Temp |= ADS1248_IDAC1_A3;
-				break;
-			case 4:
-				Temp |= ADS1248_IDAC1_A4;
-				break;
-			case 5:
-				Temp |= ADS1248_IDAC1_A5;
-				break;
-			case 6:
-				Temp |= ADS1248_IDAC1_A6;
-				break;
-			case 7:
-				Temp |= ADS1248_IDAC1_A7;
-				break;
-			case 8:
-				Temp |= ADS1248_IDAC1_EXT1;
-				break;
-			case 9:
-				Temp |= ADS1248_IDAC1_EXT2;
-				break;
-			case 10:
-				Temp |= ADS1248_IDAC1_EXT1;
-				break;
-			case 11:
-				Temp |= ADS1248_IDAC1_EXT2;
-				break;
-			case 12:
-			case 13:
-			case 14:
-			case 15:
-				Temp |= ADS1248_IDAC1_OFF;
-				break;
-			default:
-				Temp |= ADS1248_IDAC1_OFF;
-				dError = ADS1248_ERROR;
-		}
-	}
+	//ADS1248ReadRegister(ADS1248_11_IDAC1, 0x01, &Temp);
+	Temp |= (I1dir&0xf)<<4;
+	Temp |= (I2dir&0xf);
 	// write the register value containing the new value back to the ADS
 	ADS1248WriteRegister(ADS1248_11_IDAC1, 0x01, &Temp);
 	return dError;

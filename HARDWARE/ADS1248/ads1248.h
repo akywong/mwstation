@@ -64,6 +64,7 @@
 /* Error Return Values */
 #define ADS1248_NO_ERROR        0
 #define ADS1248_ERROR			-1
+//
 
 /* Command Definitions */
 // System Control
@@ -114,15 +115,17 @@
 #define ADS1248_BCS_2uA			0x80
 #define ADS1248_BCS_10uA		0xC0
 // Define Positive MUX Input Channels
+#define ADS1248_AINP_OFFSET 0x03
 #define ADS1248_AINP0			0x00
-#define ADS1248_AINP1			0x08
-#define ADS1248_AINP2			0x10
-#define ADS1248_AINP3			0x18
-#define ADS1248_AINP4			0x20
-#define ADS1248_AINP5			0x28
-#define ADS1248_AINP6			0x30
-#define ADS1248_AINP7			0x38
+#define ADS1248_AINP1			0x01
+#define ADS1248_AINP2			0x02
+#define ADS1248_AINP3			0x03
+#define ADS1248_AINP4			0x04
+#define ADS1248_AINP5			0x05
+#define ADS1248_AINP6			0x06
+#define ADS1248_AINP7			0x07
 // Define Negative Mux Input Channels
+#define ADS1248_AINN_OFFSET 0x0
 #define ADS1248_AINN0			0x00
 #define ADS1248_AINN1			0x01
 #define ADS1248_AINN2			0x02
@@ -158,10 +161,11 @@
 #define ADS1248_INT_VREF_ON		0x20
 #define ADS1248_INT_VREF_CONV	0x40
 // Define Reference Select
+#define ADS1248_REF_OFFSET 0x03
 #define ADS1248_REF0			0x00
-#define ADS1248_REF1			0x08
-#define ADS1248_INT				0x10
-#define ADS1248_INT_REF0		0x18
+#define ADS1248_REF1			0x01
+#define ADS1248_INT				0x02
+#define ADS1248_INT_REF0		0x03
 // Define System Monitor
 #define ADS1248_MEAS_NORM		0x00
 #define ADS1248_MEAS_OFFSET		0x01
@@ -178,6 +182,7 @@
 //     0     |              PGA[2:0]             |                   DOR[3:0]
 //
 // Define Gain
+#define ADS1248_GAIN_OFFSET  0x04
 #define ADS1248_GAIN_1			0x00
 #define ADS1248_GAIN_2			0x10
 #define ADS1248_GAIN_4			0x20
@@ -187,16 +192,27 @@
 #define ADS1248_GAIN_64			0x60
 #define ADS1248_GAIN_128		0x70
 //Define data rate
+#define ADS1248_DR_OFFSET 0x00
 #define ADS1248_DR_5			0x00
 #define ADS1248_DR_10			0x01
 #define ADS1248_DR_20			0x02
 #define ADS1248_DR_40			0x03
 #define ADS1248_DR_80			0x04
-#define ADS1248_DR_160			0x05
-#define ADS1248_DR_320			0x06
-#define ADS1248_DR_640			0x07
-#define ADS1248_DR_1000			0x08
-#define ADS1248_DR_2000			0x09
+#define ADS1248_DR_160		0x05
+#define ADS1248_DR_320		0x06
+#define ADS1248_DR_640		0x07
+#define ADS1248_DR_1000		0x08
+#define ADS1248_DR_2000		0x09
+
+#define ADS1248_IDAC_OFFSET 0x00
+#define ADS1248_IDAC_OFF		0x00
+#define ADS1248_IDAC_50			0x01
+#define ADS1248_IDAC_100		0x02
+#define ADS1248_IDAC_250		0x03
+#define ADS1248_IDAC_500		0x04
+#define ADS1248_IDAC_750		0x05
+#define ADS1248_IDAC_1000		0x06
+#define ADS1248_IDAC_1500		0x07
 
 /* ADS1248 Register 4 (OFC0) Definition */
 //   Bit 7   |   Bit 6   |   Bit 5   |   Bit 4   |   Bit 3   |   Bit 2   |   Bit 1   |   Bit 0
@@ -240,9 +256,11 @@
 //                     ID[3:0]                   | DRDY_MODE |              IMAG[2:0]
 //
 // Define DRDY mode on DOUT
+#define ADS1248_DRDY_OFFSET 0x03
 #define ADS1248_DRDY_OFF		0x00
-#define ADS1248_DRDY_ON			0x08
+#define ADS1248_DRDY_ON			0x01
 //Define IDAC Magnitude
+#define ADS1248_IDAC_OFFSET	0x00
 #define ADS1248_IDAC_OFF		0x00
 #define ADS1248_IDAC_50			0x01
 #define ADS1248_IDAC_100		0x02
@@ -258,6 +276,7 @@
 //                   I1DIR[3:0]                  |                   I2DIR[3:0]
 //
 // Define IDAC1 Output
+#define ADS1248_IDAC1_OFFSET 0x4
 #define ADS1248_IDAC1_A0		0x00
 #define ADS1248_IDAC1_A1		0x10
 #define ADS1248_IDAC1_A2		0x20
@@ -270,6 +289,7 @@
 #define ADS1248_IDAC1_EXT2		0x90
 #define ADS1248_IDAC1_OFF		0xF0
 // Define IDAC2 Output
+#define ADS1248_IDAC2_OFFSET 0x0
 #define ADS1248_IDAC2_A0		0x00
 #define ADS1248_IDAC2_A1		0x01
 #define ADS1248_IDAC2_A2		0x02
@@ -343,7 +363,7 @@ void ADS1248SendSELFOCAL(void);					// Self offset calibration
 /* Register Set Value Commands */
 // Relate to MUX0
 int ADS1248SetBurnOutSource(int BurnOut);
-int ADS1248SetChannel(int pMux, int vMux);		// pMux (0=AINP. 1=AINN); vMux (value of mux channel selection)
+int ADS1248SetChannel(int pMux, int nMux);
 // Relate to VBIAS
 int ADS1248SetBias(unsigned char vBias);
 // Relate to MUX1
@@ -361,7 +381,7 @@ int ADS1248SetFSC(long RegGain);
 int ADS1248SetDRDYMode(int DRDYMode);
 int ADS1248SetCurrentDACOutput(int CurrentOutput);
 // Relate to IDAC1
-int ADS1248SetIDACRouting(int IDACroute, int IDACdir);		// IDACRoute (0 = I1DIR, 1 = I2DIR)
+int ADS1248SetIDACRouting(int I1dir, int I2dir);
 // Relate to GPIOCFG
 int ADS1248SetGPIOConfig(unsigned char cdata);
 // Relate to GPIODIR

@@ -158,15 +158,13 @@ int main(void)
 		ADS1248_GPIO_Init();
 		ADS1248_SET_SEL0();
 		ADS1248_SET_SEL1();
-		ADS1248SetChannel(0,0);
-		ADS1248SetChannel(1,1);
-		ADS1248SetVoltageReference(1);
-		ADS1248SetGain(3);
-		ADS1248SetDataRate(2);
-		ADS1248SetCurrentDACOutput(3);
-		ADS1248SetDRDYMode(0);
-		ADS1248SetIDACRouting(0,8);
-		ADS1248SetIDACRouting(1,9);
+		ADS1248SetChannel(ADS1248_AINP0,ADS1248_AINN1);//(P,N)
+		ADS1248SetVoltageReference(ADS1248_REF1);
+		ADS1248SetGain(ADS1248_GAIN_8);
+		ADS1248SetDataRate(ADS1248_DR_20);
+		ADS1248SetCurrentDACOutput(ADS1248_IDAC_250);
+		ADS1248SetDRDYMode(ADS1248_DRDY_OFF);
+		ADS1248SetIDACRouting(ADS1248_IDAC1_EXT1,ADS1248_IDAC2_EXT2);
 		for(;;){
 			ret = ADS1248GetGain();
 			printf("get gain£º%d\n",ret);
