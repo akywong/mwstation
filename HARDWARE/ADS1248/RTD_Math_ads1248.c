@@ -37,7 +37,7 @@
 
 
 float ads1248_gain=8.0;
-float ads1248_rref=2000.0;
+float ads1248_rref=3240.0;
 
 //extern float Rref;
 

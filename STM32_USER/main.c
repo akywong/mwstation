@@ -26,9 +26,10 @@
 #include "utils.h"
 #include "as3935.h"
 #include "bsp_ads1256.h"
+#include "pcap.h"
 #include "main.h"
 
-float Rref = 3240.0;
+float Rref = 2000.0;
 float FlashGainCorrection;
 
 float DacErrorCorrection = 0.99945;
@@ -151,7 +152,7 @@ int main(void)
 		}
 		return 0;
 	}
-	if(1){
+	if(0){
 		uint8_t ret;
 		USART1_Init(115200); //串口1初始化
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
@@ -173,7 +174,15 @@ int main(void)
 		return 0;
 	}
 	
-	
+	if(1){
+		uint8_t write = 0xA9;
+		uint8_t read=0;
+		USART1_Init(115200); //串口1初始化
+	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+		PCAP_sram_write(0,&write);
+		PCAP_sram_read(0,&read);
+		printf("write value %d,read value %d\b",write,read);
+	}
 	//bsp_InitADS1256();
 	
 	//ADS1256_CfgADC((ADS1256_GAIN_E)3, ADS1256_5SPS);

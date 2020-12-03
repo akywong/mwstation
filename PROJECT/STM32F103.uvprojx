@@ -10,12 +10,11 @@
       <TargetName>STM32F103</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060061::V5.06 update 1 (build 61)::ARMCC</pCCUsed>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32F103ZE</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <PackID>Keil.STM32F1xx_DFP.2.2.0</PackID>
+          <PackID>Keil.STM32F1xx_DFP.1.1.0</PackID>
           <PackURL>http://www.keil.com/pack/</PackURL>
           <Cpu>IROM(0x08000000,0x80000) IRAM(0x20000000,0x10000) CPUTYPE("Cortex-M3") CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -85,8 +84,6 @@
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
-            <nStopA1X>0</nStopA1X>
-            <nStopA2X>0</nStopA2X>
           </AfterMake>
           <SelectedForBatchBuild>0</SelectedForBatchBuild>
           <SVCSIdString></SVCSIdString>
@@ -230,7 +227,6 @@
             <useUlib>1</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
-            <nSecure>0</nSecure>
             <RoSelD>3</RoSelD>
             <RwSelD>3</RwSelD>
             <CodeSel>0</CodeSel>
@@ -365,15 +361,11 @@
             <uSurpInc>0</uSurpInc>
             <uC99>0</uC99>
             <useXO>0</useXO>
-            <v6Lang>0</v6Lang>
-            <v6LangP>0</v6LangP>
-            <vShortEn>0</vShortEn>
-            <vShortWch>0</vShortWch>
             <VariousControls>
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\STM32_USER;..\CORE;..\STM32F10x_FWLib\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\IIC;..\HARDWARE\SPI;..\HARDWARE\LED;..\HARDWARE\SDIO;..\HARDWARE\BEEP;..\HARDWARE\USART;..\HARDWARE\IO_SPI;..\HARDWARE\W25QXX;..\MODULES\FATFS;..\MODULES\FATFS\src;..\MODULES\FATFS\src\option;..\HARDWARE\RTX;..\HARDWARE\RTC;..\HARDWARE\TIMER;..\HARDWARE\ADC;..\HARDWARE\SPI;..\HARDWARE\BME280;..\HARDWARE\ADS1256;..\HARDWARE\KEY;..\HARDWARE\24CXX;..\HARDWARE\IO_IIC;..\HARDWARE\IWDG;..\HARDWARE\HYT939;..\HARDWARE\LPS22HB;..\HARDWARE\ADS1220;..\HARDWARE\IO;..\HARDWARE\ADS1248;..\HARDWARE\AS3935</IncludePath>
+              <IncludePath>..\STM32_USER;..\CORE;..\STM32F10x_FWLib\inc;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\HARDWARE\IIC;..\HARDWARE\SPI;..\HARDWARE\LED;..\HARDWARE\SDIO;..\HARDWARE\BEEP;..\HARDWARE\USART;..\HARDWARE\IO_SPI;..\HARDWARE\W25QXX;..\MODULES\FATFS;..\MODULES\FATFS\src;..\MODULES\FATFS\src\option;..\HARDWARE\RTX;..\HARDWARE\RTC;..\HARDWARE\TIMER;..\HARDWARE\ADC;..\HARDWARE\SPI;..\HARDWARE\BME280;..\HARDWARE\ADS1256;..\HARDWARE\KEY;..\HARDWARE\24CXX;..\HARDWARE\IO_IIC;..\HARDWARE\IWDG;..\HARDWARE\HYT939;..\HARDWARE\LPS22HB;..\HARDWARE\ADS1220;..\HARDWARE\IO;..\HARDWARE\ADS1248;..\HARDWARE\AS3935;..\HARDWARE\PCAP</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -578,6 +570,11 @@
               <FileName>RTD_Math_ads1248.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\ADS1248\RTD_Math_ads1248.c</FilePath>
+            </File>
+            <File>
+              <FileName>pcap.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\PCAP\pcap.c</FilePath>
             </File>
           </Files>
         </Group>
