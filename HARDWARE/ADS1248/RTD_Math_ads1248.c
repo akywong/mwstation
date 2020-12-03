@@ -37,7 +37,7 @@
 
 
 float ads1248_gain=8.0;
-float ads1248_rref=3240.0;
+float ads1248_rref=2000.0;
 
 //extern float Rref;
 
@@ -244,7 +244,7 @@ float ads1248_calculateRValue (long code)
     float rtd;            // Must be volatile to force the order of operations below
 
 
-    rtd = (code * ads1248_rref) / (ads1248_gain * 8388607.0*2.0);// (code * Rref * 2.0) 
+    rtd = (code * ads1248_rref*2.0) / (ads1248_gain * 8388607.0);// (code * Rref * 2.0) 
 
     return (rtd);
 }

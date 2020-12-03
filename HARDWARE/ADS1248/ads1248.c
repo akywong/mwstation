@@ -1,7 +1,9 @@
+#include <stdio.h>
 #include "spi.h"
 #include "RTD_Math_ads1248.h"
 #include "ads1248.h"
 #include "delay.h"
+
 
 #define ADS1248_SPI2
 
@@ -400,7 +402,7 @@ int ADS1248SetGain(int Gain)
 	unsigned int Temp;
 	int dError = ADS1248_NO_ERROR;
 	ADS1248ReadRegister(ADS1248_3_SYS0, 0x01, &Temp);
-	Temp &= 0x0f;
+	Temp &= ~(7<<4);
 	Temp |= (Gain&7)<<4;
 	// write the register value containing the new value back to the ADS
 	ADS1248WriteRegister(ADS1248_3_SYS0, 0x01, &Temp);
@@ -847,9 +849,47 @@ unsigned char Ads_Calibrate(unsigned int Gain)
 float ADS1248_Get_Temperature(void)
 {
 	int code;
-	ADS1248SendRDATAC();
+	//ADS1248SendRDATAC();
 	
 	code = ADS1248RDATACRead();
 	//delay_ms(10);
 	return (ads1248_interpolateTemperatureValue(code));
+}
+void ADS1248_SELFOCAL(void)
+{
+	int i;
+	
+	ads1248_spi_init();
+	// set the CS low  
+	ADS1248_ENABLE(); 
+	ADS1248_START_H(); 
+	ADS1248_DELAY(1);
+	// send the command byte
+	ADS1248_SPI_SendByte(0x62 );
+	ADS1248_SPI_SendByte(1);
+	ADS1248_DELAY(1);
+	//ADS1248_START_L(); 
+	ADS1248_DISABLE();
+}
+void ADS1248_dump(uint8_t *data)
+{
+	int i;
+	ads1248_spi_init();
+	// assert CS to start transfer 
+	ADS1248_ENABLE(); 
+	ADS1248_START_H(); 
+	ADS1248_DELAY(1);
+	// send the command byte
+	ADS1248_SPI_SendByte(ADS1248_CMD_RREG | 0);
+	ADS1248_SPI_SendByte(14);
+	// get the register content
+	for (i=0; i< 15; i++)
+	{
+		data[i] = ADS1248_SPI_SendByte(0xFF);
+	} 
+	ADS1248_DELAY(1);
+	//ADS1248_START_L();
+	ADS1248_DISABLE(); 
+	
+	return;
 }

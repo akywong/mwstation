@@ -29,7 +29,7 @@
 #include "pcap.h"
 #include "main.h"
 
-float Rref = 2000.0;
+float Rref = 3240.0;
 float FlashGainCorrection;
 
 float DacErrorCorrection = 0.99945;
@@ -152,7 +152,7 @@ int main(void)
 		}
 		return 0;
 	}
-	if(0){
+	if(1){
 		uint8_t ret;
 		USART1_Init(115200); //串口1初始化
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
@@ -162,19 +162,29 @@ int main(void)
 		ADS1248SetVoltageReference(ADS1248_REF1);
 		ADS1248SetGain(ADS1248_GAIN_8);
 		ADS1248SetDataRate(ADS1248_DR_20);
-		ADS1248SetCurrentDACOutput(ADS1248_IDAC_250);
+		ADS1248SetCurrentDACOutput(ADS1248_IDAC_500);
 		ADS1248SetDRDYMode(ADS1248_DRDY_OFF);
 		ADS1248SetIDACRouting(ADS1248_IDAC1_EXT1,ADS1248_IDAC2_EXT2);
+		ADS1248SetOFC(0x0);
+		//ADS1248SetFSC(0x400000);
+		ADS1248SetIntRef(1);
+		ADS1248_SELFOCAL();
+		{
+			int i;
+		 uint8_t data[16];
+			ADS1248_dump(data);
+			for(i=0;i<15;i++){
+				printf("reg%2d:0x%02x\n",i,data[i]);
+			}
+		}
 		for(;;){
-			ret = ADS1248GetGain();
-			printf("get gain：%d\n",ret);
 			delay_ms(200);
 			printf("%f\n",ADS1248_Get_Temperature());
 		}
 		return 0;
 	}
 	
-	if(1){
+	if(0){
 		uint8_t write = 0xA9;
 		uint8_t read=0;
 		USART1_Init(115200); //串口1初始化

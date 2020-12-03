@@ -184,13 +184,13 @@
 // Define Gain
 #define ADS1248_GAIN_OFFSET  0x04
 #define ADS1248_GAIN_1			0x00
-#define ADS1248_GAIN_2			0x10
-#define ADS1248_GAIN_4			0x20
-#define ADS1248_GAIN_8			0x30
-#define ADS1248_GAIN_16			0x40
-#define ADS1248_GAIN_32			0x50
-#define ADS1248_GAIN_64			0x60
-#define ADS1248_GAIN_128		0x70
+#define ADS1248_GAIN_2			0x01
+#define ADS1248_GAIN_4			0x02
+#define ADS1248_GAIN_8			0x03
+#define ADS1248_GAIN_16			0x04
+#define ADS1248_GAIN_32			0x05
+#define ADS1248_GAIN_64			0x06
+#define ADS1248_GAIN_128		0x07
 //Define data rate
 #define ADS1248_DR_OFFSET 0x00
 #define ADS1248_DR_5			0x00
@@ -278,16 +278,16 @@
 // Define IDAC1 Output
 #define ADS1248_IDAC1_OFFSET 0x4
 #define ADS1248_IDAC1_A0		0x00
-#define ADS1248_IDAC1_A1		0x10
-#define ADS1248_IDAC1_A2		0x20
-#define ADS1248_IDAC1_A3		0x30
-#define ADS1248_IDAC1_A4		0x40
-#define ADS1248_IDAC1_A5		0x50
-#define ADS1248_IDAC1_A6		0x60
-#define ADS1248_IDAC1_A7		0x70
-#define ADS1248_IDAC1_EXT1		0x80
-#define ADS1248_IDAC1_EXT2		0x90
-#define ADS1248_IDAC1_OFF		0xF0
+#define ADS1248_IDAC1_A1		0x01
+#define ADS1248_IDAC1_A2		0x02
+#define ADS1248_IDAC1_A3		0x03
+#define ADS1248_IDAC1_A4		0x04
+#define ADS1248_IDAC1_A5		0x05
+#define ADS1248_IDAC1_A6		0x06
+#define ADS1248_IDAC1_A7		0x07
+#define ADS1248_IDAC1_EXT1		0x08
+#define ADS1248_IDAC1_EXT2		0x09
+#define ADS1248_IDAC1_OFF		0x0f
 // Define IDAC2 Output
 #define ADS1248_IDAC2_OFFSET 0x0
 #define ADS1248_IDAC2_A0		0x00
@@ -427,6 +427,10 @@ int ADS1248RDATARead(void);
 float ADS1248_Get_Temperature(void);
 
 void  ADS1248_channel_select(int ch);
+
+void ADS1248_SELFOCAL(void);
+
+void ADS1248_dump(unsigned char *data);
 
 void Delay1us(void);
 void Delay10us(void);
