@@ -97,7 +97,11 @@ void PCAP_finish_write()
 {
 	PCAPWriteRegister(0x14,1);
 }
-
+#define PCAP_POWERUP_RESET_CMD  0x88
+#define PCAP_INITIAL_RESET_CMD  0x8A
+#define PCAP_START_CDC_CMD      0x8C      
+#define PCAP_TERMINAL_WOTP_CMD  0x84
+#define PCAP_START_RDC_CMD      0x8E
 void PCAP_send_command(uint8_t command)
 {
 	pcap_spi_init();
@@ -108,6 +112,26 @@ void PCAP_send_command(uint8_t command)
 	PCAP_SPI_SendByte(command);
 	PCAP_DELAY(1); 
 	PCAP_DISABLE();
+}
+void PCAP_powerup_reset(void)
+{
+	PCAP_send_command(PCAP_POWERUP_RESET_CMD);
+}
+void PCAP_patitial_reset(void)
+{
+	PCAP_send_command(PCAP_INITIAL_RESET_CMD);
+}
+void PCAP_start_cdc(void)
+{
+	PCAP_send_command(PCAP_START_CDC_CMD);
+}
+void PCAP_stop_write_otp(void)
+{
+	PCAP_send_command(PCAP_TERMINAL_WOTP_CMD);
+}
+void PCAP_start_rdc(void)
+{
+	PCAP_send_command(PCAP_START_RDC_CMD);
 }
 #define PCAP_CMD_WSRAM 0x9000
 #define PCAP_CMD_RSRAM 0x1000
@@ -137,3 +161,32 @@ void PCAP_sram_write(uint16_t addr,uint8_t *data)
 {
 	PCAP_sram_op(PCAP_CMD_WSRAM,addr,data);
 }
+#define PCAP_CMD_WOTP  0xA000
+#define PCAP_CMD_ROTP  0x2000
+void PCAP_otp_op(uint16_t op,uint16_t addr,uint8_t *data)
+{
+	addr &= 0x1fff;
+	addr |= op;
+	
+	pcap_spi_init();
+	// set the CS low  
+	PCAP_ENABLE(); 
+	PCAP_DELAY(1);
+	// send the command byte
+	PCAP_SPI_SendByte((addr>>8)&0xff);
+	PCAP_SPI_SendByte(addr&0xff);
+	// send the data bytes
+	PCAP_SPI_SendByte(*data);
+	
+	PCAP_DELAY(1); 
+	PCAP_DISABLE();
+}
+void PCAP_otp_read(uint16_t addr,uint8_t *data)
+{
+	PCAP_otp_op(PCAP_CMD_ROTP,addr,data);
+}
+void PCAP_otp_write(uint16_t addr,uint8_t *data)
+{
+	PCAP_otp_op(PCAP_CMD_WOTP,addr,data);
+}
+
