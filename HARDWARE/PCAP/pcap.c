@@ -117,7 +117,7 @@ void PCAP_powerup_reset(void)
 {
 	PCAP_send_command(PCAP_POWERUP_RESET_CMD);
 }
-void PCAP_patitial_reset(void)
+void PCAP_partitial_reset(void)
 {
 	PCAP_send_command(PCAP_INITIAL_RESET_CMD);
 }
@@ -189,4 +189,38 @@ void PCAP_otp_write(uint16_t addr,uint8_t *data)
 {
 	PCAP_otp_op(PCAP_CMD_WOTP,addr,data);
 }
+void PCAP_config(uint32_t *regs)
+{
+	int i;
+	for(i=0;i<11;i++){
+		PCAPWriteRegister(i,regs[i]);
+	}
+	PCAP_finish_write();
+}
+void PCAP_read_status(uint32_t *reg)
+{
+	PCAPReadRegister(8,reg);
+}
+void PCAP_read_cdc(uint8_t id,uint32_t *regs)
+{
+	if(id<8){
+		PCAPReadRegister(id,regs);
+	}else{
+		int i;
+		for(i=0;i<8;i++){
+			PCAPReadRegister(i,regs+i);
+		}
+	}
+}
 
+void PCAP_read_rdc(uint8_t id,uint32_t *regs)
+{
+	if(id<2){
+		PCAPReadRegister(id+0x13,regs);
+	}else{
+		int i;
+		for(i=0;i<2;i++){
+			PCAPReadRegister(i,regs+i);
+		}
+	}
+}

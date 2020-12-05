@@ -189,9 +189,28 @@ int main(void)
 		uint8_t read=0;
 		USART1_Init(115200); //´®¿Ú1³õÊ¼»¯
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+		
+		PCAP_powerup_reset();
 		PCAP_sram_write(0,&write);
 		PCAP_sram_read(0,&read);
 		printf("write value %d,read value %d\b",write,read);
+		{
+			uint32_t regs[11]={0x42000F,0x201022,0x03160B,0x0D0064,0x080000,0,0x000040,0x1F0000,0x800030,0xFF000F,0x180087};
+			uint32_t status;
+			uint32_t rregs[11]={0};
+			PCAP_config(regs);
+			PCAP_partitial_reset();
+			PCAP_start_cdc();
+			delay_ms(600);
+			PCAP_read_status(&status);
+			PCAP_read_cdc(8,rregs);
+			{
+				int i;
+				for(i=0;i<8;i++){
+					printf("%d\n",rregs[i]);
+				}
+			}
+		}
 	}
 	//bsp_InitADS1256();
 	
