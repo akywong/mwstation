@@ -19,7 +19,7 @@ void PCAP_start_cdc(void);
 void PCAP_stop_write_otp(void);
 void PCAP_start_rdc(void);
 void PCAP_sram_read(uint16_t addr,uint8_t *data);
-void PCAP_sram_write(uint16_t addr,uint8_t *data);
+void PCAP_sram_write(uint16_t addr,uint8_t data);
 void PCAP_config(uint32_t *regs);
 void PCAP_read_status(uint32_t *reg);
 void PCAP_read_cdc(uint8_t id,uint32_t *regs);

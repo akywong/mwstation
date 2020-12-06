@@ -135,10 +135,10 @@ void PCAP_start_rdc(void)
 }
 #define PCAP_CMD_WSRAM 0x9000
 #define PCAP_CMD_RSRAM 0x1000
-void PCAP_sram_op(uint16_t op,uint16_t addr,uint8_t *data)
+void PCAP_sram_read(uint16_t addr,uint8_t *data)
 {
 	addr &= 0x0fff;
-	addr |= op;
+	addr |= PCAP_CMD_RSRAM;
 	
 	pcap_spi_init();
 	// set the CS low  
@@ -148,18 +148,28 @@ void PCAP_sram_op(uint16_t op,uint16_t addr,uint8_t *data)
 	PCAP_SPI_SendByte((addr>>8)&0xff);
 	PCAP_SPI_SendByte(addr&0xff);
 	// send the data bytes
-	PCAP_SPI_SendByte(*data);
+	*data = PCAP_SPI_SendByte(0xff);
 	
 	PCAP_DELAY(1); 
 	PCAP_DISABLE();
 }
-void PCAP_sram_read(uint16_t addr,uint8_t *data)
+void PCAP_sram_write(uint16_t addr,uint8_t data)
 {
-	PCAP_sram_op(PCAP_CMD_RSRAM,addr,data);
-}
-void PCAP_sram_write(uint16_t addr,uint8_t *data)
-{
-	PCAP_sram_op(PCAP_CMD_WSRAM,addr,data);
+	addr &= 0x0fff;
+	addr |= PCAP_CMD_WSRAM;
+	
+	pcap_spi_init();
+	// set the CS low  
+	PCAP_ENABLE(); 
+	PCAP_DELAY(1);
+	// send the command byte
+	PCAP_SPI_SendByte((addr>>8)&0xff);
+	PCAP_SPI_SendByte(addr&0xff);
+	// send the data bytes
+	PCAP_SPI_SendByte(data);
+	
+	PCAP_DELAY(1); 
+	PCAP_DISABLE();
 }
 #define PCAP_CMD_WOTP  0xA000
 #define PCAP_CMD_ROTP  0x2000

@@ -191,9 +191,9 @@ int main(void)
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 		
 		PCAP_powerup_reset();
-		PCAP_sram_write(0,&write);
+		PCAP_sram_write(0,write);
 		PCAP_sram_read(0,&read);
-		printf("write value %d,read value %d\b",write,read);
+		printf("write value 0x%x,read value 0x%x\n",write,read);
 		{
 			uint32_t regs[11]={0x42000F,0x201022,0x03160B,0x0D0064,0x080000,0,0x000040,0x1F0000,0x800030,0xFF000F,0x180087};
 			uint32_t status;
