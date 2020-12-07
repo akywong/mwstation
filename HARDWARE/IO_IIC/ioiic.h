@@ -46,10 +46,11 @@
 #define IIC_SDA    PBout(7) //SDA	 
 #define READ_SDA   PBin(7)  // ‰»ÎSDA 
 
-
-
-
-
+// I2C acknowledge
+typedef enum{
+  ACK  = 0,
+  NACK = 1,
+}etI2cAck;
 
 void IO_IIC_Init(void);
 void IO_IIC_Start(void);

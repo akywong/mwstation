@@ -1,5 +1,4 @@
 /*  main.c  */
-
 #include "sys.h"
 #include "stm32f10x_flash.h"
 #include "delay.h"
@@ -27,6 +26,7 @@
 #include "as3935.h"
 #include "bsp_ads1256.h"
 #include "pcap.h"
+#include "sht3x.h"
 #include "main.h"
 
 float Rref = 3240.0;
@@ -115,18 +115,56 @@ int main(void)
 	delay_init();	    //延时函数初始化
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置中断优先级分组为组2：2位抢占优先级，2位响应优先级
 	TIM_SetInterval(1,2000);//1ms
-	LED_Init();
+	//LED_Init();
 	//Key_Init();
 	IO_Init();
 	//SPI1_Init();
 	SPI2_Init();
-	//ADS1248_GPIO_Init();
 	AT24CXX_Init();
 	if(0){
 		Thunder_Init();
 	}
+	if(1){
+		float pressure;
+		USART1_Init(115200); //串口1初始化
+	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+		if(lps22hb_init()){
+			LED_ON(LED1);
+		}
+		while(1){
+			if(0 == lps22hb_get_pressure(&pressure)){
+				printf("pressure %f Pa\n",pressure);
+			}
+			delay_ms(1000);
+		}
+	}
 	
 	if(0){
+		etError err;
+		float temperature=0.0;
+		float humidity=0.0;
+		USART1_Init(115200); //串口1初始化
+	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+		SHT3X_Init(0x44);
+		if(1){
+			u32t      serialNumber;// serial number
+			delay_ms(50);
+			err = SHT3x_ReadSerialNumber(&serialNumber);
+			if(err != NO_ERROR){
+			} // do error handling here
+			printf("serial num :%ld\n",serialNumber);
+		}
+		while(1){
+			if(NO_ERROR == SHT3X_GetTempAndHumi(&temperature, &humidity, REPEATAB_HIGH, MODE_CLKSTRETCH, 50)){
+			//if(NO_ERROR == SHT3X_GetTempAndHumi(&temperature, &humidity, REPEATAB_HIGH, MODE_POLLING, 50)){
+				printf("temperature %f,humidity %f%%\n",temperature,humidity);
+			}
+			delay_ms(1000);
+		}
+	}
+	
+	if(0){
+		uint8_t gain = ADS1256_GAIN_8;
 		USART1_Init(115200); //串口1初始化
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 		bsp_InitADS1256();
@@ -134,15 +172,15 @@ int main(void)
 			uint8_t id = ADS1256_ReadChipID();
 			printf("ads1256 id = %d\n",id);
 		}
-		ADS1256_CfgADC(ADS1256_GAIN_64, ADS1256_5SPS);
+		ADS1256_CfgADC((ADS1256_GAIN_E)gain, ADS1256_5SPS);
 		ADS1256_StartScan(1);	
 		while(1){
 			delay_ms(500);
-			printf("channel 1 :%f\n",(double)ADS1256_GetAdc(0));
-			printf("channel 2 :%f\n",(double)ADS1256_GetAdc(1));
-			printf("channel 3 :%f\n",(double)ADS1256_GetAdc(2));
-			printf("channel 4 :%f\n",(double)ADS1256_GetAdc(4));
-			printf("channel 5 :%f\n",(double)ADS1256_GetAdc(5));
+			printf("channel 1 :%f\n",(((double)ADS1256_GetAdc(0)) * 2.5000000) / 4194303.0/(double)(1<<gain));
+			printf("channel 2 :%f\n",(((double)ADS1256_GetAdc(1)) * 2.5000000) / 4194303.0/(double)(1<<gain));
+			printf("channel 3 :%f\n",(((double)ADS1256_GetAdc(2)) * 2.5000000) / 4194303.0/(double)(1<<gain));
+			printf("channel 4 :%f\n",(((double)ADS1256_GetAdc(3)) * 2.5000000) / 4194303.0/(double)(1<<gain));
+			printf("channel 5 :%f\n",(((double)ADS1256_GetAdc(4)) * 2.5000000) / 4194303.0/(double)(1<<gain));
 			
 			if(ADS1256_GetAdc(8)) {
 				printf(" ADS1256 RESET\r\n");
@@ -152,13 +190,13 @@ int main(void)
 		}
 		return 0;
 	}
-	if(1){
+	if(0){
 		uint8_t ret;
 		USART1_Init(115200); //串口1初始化
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 		ADS1248_GPIO_Init();
-		ADS1248_channel_select(1);
-		ADS1248SetChannel(ADS1248_AINP0,ADS1248_AINN1);//(P,N)
+		ADS1248_channel_select(2);
+		ADS1248SetChannel(ADS1248_AINP4,ADS1248_AINN5);//(P,N)
 		ADS1248SetVoltageReference(ADS1248_REF1);
 		ADS1248SetGain(ADS1248_GAIN_8);
 		ADS1248SetDataRate(ADS1248_DR_20);

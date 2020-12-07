@@ -127,6 +127,58 @@ void bsp_DelayUS(u16 nus)
 {
 	delay_us(nus);
 }
+
+void ads1256_gpio_init(void)
+{
+ 	GPIO_InitTypeDef GPIO_InitStructure;
+	//ads1248片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOD, ENABLE );//PORTD时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;        // PD12 推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOD, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOD,GPIO_Pin_12);
+	//as3935片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOD, ENABLE );//PORTD时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;        // PD12 推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOD, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOD,GPIO_Pin_0);
+	
+	//ads1220片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOG, ENABLE );//PORTG时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;        // PG3推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOG, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOG,GPIO_Pin_3);
+	
+	//lps22hb片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOG, ENABLE );//PORTG时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;        // PG8 推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOG, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOG,GPIO_Pin_8);
+	
+	//PCAP01片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOG, ENABLE );//PORTG时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;        // PG6 推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOG, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOG,GPIO_Pin_6);
+	
+	//ADS1256片选
+	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOE, ENABLE );//PORTE时钟使能 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;        // PE8 推挽 
+ 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  //推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 	GPIO_Init(GPIOE, &GPIO_InitStructure);
+ 	GPIO_SetBits(GPIOE,GPIO_Pin_8);
+}
+
 /*
 *********************************************************************************************************
 *	函 数 名: bsp_InitADS1256
@@ -139,6 +191,7 @@ void bsp_InitADS1256(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
+	ads1256_gpio_init();
 
 	/* 打开GPIO时钟 */
 	RCC_APB2PeriphClockCmd(RCC_SCK | RCC_DIN | RCC_DOUT | RCC_CS | RCC_DRDY|RCC_SYNC, ENABLE);
@@ -768,14 +821,14 @@ void ADS1256_StopScan(void)
 	NVIC_InitTypeDef   NVIC_InitStructure;
 
 	/* 配置 EXTI LineXXX */
-	EXTI_InitStructure.EXTI_Line = EXTI_Line3;
+	EXTI_InitStructure.EXTI_Line = EXTI_Line7;
 	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
 	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;	/* 下降沿(等待 DRDY 由1变0的时刻) */
 	EXTI_InitStructure.EXTI_LineCmd = DISABLE;		/* 禁止 */
 	EXTI_Init(&EXTI_InitStructure);
 
 	/* 中断优先级配置 最低优先级 这里一定要分开的设置中断，不能够合并到一个里面设置 */
-	NVIC_InitStructure.NVIC_IRQChannel = EXTI3_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x03;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;		/* 禁止 */
