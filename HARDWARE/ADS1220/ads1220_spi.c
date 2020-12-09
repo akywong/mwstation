@@ -3,12 +3,22 @@
 #include "usart.h"
 #include "spi.h"
 
+
+#define ADS1220_SPI2
+
 /////Ó²¼þSPI
-#define ads1220_spi_init()         SPI1_SetMode(SPI_CPOL_Low,SPI_CPHA_2Edge)
+#ifdef ADS1220_SPI2
+#define ads1220_spi_init()         SPI2_SetMode(SPI_CPOL_High,SPI_CPHA_2Edge)
+#else
+#define ads1220_spi_init()         SPI1_SetMode(SPI_CPOL_High,SPI_CPHA_2Edge)
+#endif
 #define ads1220_cs_h()             SPI_ADS1220_CS_H()
 #define ads1220_cs_l()             SPI_ADS1220_CS_L()
+#ifdef ADS1220_SPI2
+#define ads1220_spi_rw_byte(x)     SPI2_ReadWriteByte(x)
+#else
 #define ads1220_spi_rw_byte(x)     SPI1_ReadWriteByte(x)
-void ads1220_delay_ms(uint32_t period);
+#endif
 
 unsigned char SPI_Write (unsigned char spiHandle, unsigned char *outData, unsigned char *inData, unsigned char length)
 {
@@ -16,22 +26,13 @@ unsigned char SPI_Write (unsigned char spiHandle, unsigned char *outData, unsign
 	
 	ads1220_spi_init();
 	ads1220_cs_l();
-	ads1220_delay_ms(1);
+	delay_ms(1);
 	for(i=0; i<length; i++){
 		inData[i] = ads1220_spi_rw_byte(outData[i]);
 	}
-	ads1220_delay_ms(1);
+	delay_ms(1);
 	ads1220_cs_h();
 	
 	return 0;
 }
 
-void ads1220_delay_ms(uint32_t period)
-{
-	int i,j;
-  for(i=0;i<period;i++){
-		for(j=0;j<100000;j++) {
-			__nop();
-		}
-	}
-}

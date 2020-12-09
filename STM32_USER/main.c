@@ -124,7 +124,7 @@ int main(void)
 	if(0){
 		Thunder_Init();
 	}
-	if(1){
+	if(0){
 		float pressure;
 		USART1_Init(115200); //串口1初始化
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
@@ -249,6 +249,54 @@ int main(void)
 				}
 			}
 		}
+	}
+	if(1){
+		
+		USART1_Init(115200); //串口1初始化
+	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+		ADS1220_Reset();
+
+    // Determine the ADS1220 Calibration offset - Short the AIN0 and AIN1 together and measure the results 4 times.
+    // The average result will be subtracted from all future measurements.
+    Setup_ADS1220 (ADS1220_MUX_SHORTED, ADS1220_OP_MODE_NORMAL,
+                   ADS1220_CONVERSION_SINGLE_SHOT, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_8, ADS1220_USE_PGA,
+                   ADS1220_IDAC1_AIN2, ADS1220_IDAC2_DISABLED, ADS1220_IDAC_CURRENT_500_UA);//ADS1220_IDAC2_DISABLED*/
+		delay_ms(500);
+		
+		ReadConversionData = 0;
+		ads1220_int_start();
+    ADS1220_Start ();    
+		// Gather and average 8 readings from the ADS1220
+    while (calibrateCount < 8)
+    {
+        while (!ReadConversionData);   // Wait for Data Ready interrupt
+        ReadConversionData = 0;
+        ADS1220_Get_Conversion_Data ((unsigned char *)tempData);   // Get the raw data
+        ADS1220_Offset_Calibrate_Data ((unsigned char *)tempData);        // Send results to calibration function
+        calibrateCount++;
+
+        // Start next calibration reading?
+        if (calibrateCount < 8)
+            ADS1220_Start ();
+    }
+	
+		// Configure ADS1220 for actual measurements
+    Setup_ADS1220 (ADS1220_MUX_AIN0_AIN1, ADS1220_OP_MODE_NORMAL,
+                   ADS1220_CONVERSION_SINGLE_SHOT, ADS1220_DATA_RATE_20SPS, ADS1220_GAIN_8, ADS1220_USE_PGA,
+                   ADS1220_IDAC1_AIN2, ADS1220_IDAC2_DISABLED, ADS1220_IDAC_CURRENT_500_UA);//ADS1220_IDAC2_DISABLED//ADS1220_IDAC2_AIN2
+	
+		delay_ms(50);
+    StartConversion = 0;
+    ReadConversionData = 0;
+    ADS1220_Start ();      // Only one start needed for Continuous Mode
+		
+		while(1){
+			ads1220_temperature = ADS1220_Get_Temperature();
+			printf("ads1220 temperature %f℃\n",ads1220_temperature);
+			ADS1220_Start ();
+			delay_ms(500);
+		}
+		
 	}
 	//bsp_InitADS1256();
 	
