@@ -27,6 +27,7 @@
 #include "bsp_ads1256.h"
 #include "pcap.h"
 #include "sht3x.h"
+#include "ad7767.h"
 #include "main.h"
 
 float Rref = 3240.0;
@@ -118,9 +119,27 @@ int main(void)
 	//LED_Init();
 	//Key_Init();
 	IO_Init();
-	//SPI1_Init();
-	SPI2_Init();
+	SPI1_Init();
+	//SPI2_Init();
 	AT24CXX_Init();
+	
+	if(1){
+		int ret;
+		int value;
+		USART1_Init(115200); //串口1初始化
+	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+		
+		ret = ad7767_powerup();
+		if(ret==0){
+			printf("ad7767 powerup failed !\n");
+		}
+		delay_ms(500);
+		while(1){
+			delay_ms(1000);
+			ret = ad7767_read_data(&value);
+			printf("read ad7767 return %d, read data:%d\n",ret,value);
+		}
+	}
 	if(0){
 		Thunder_Init();
 	}
@@ -250,7 +269,7 @@ int main(void)
 			}
 		}
 	}
-	if(1){
+	if(0){
 		
 		USART1_Init(115200); //串口1初始化
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
