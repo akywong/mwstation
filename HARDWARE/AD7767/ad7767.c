@@ -91,7 +91,7 @@ void ad7767_init()
 	GPIO_Init(AD7767_POWERDOWN_GPIO_PORT, &GPIO_InitStructure);
 
 
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
