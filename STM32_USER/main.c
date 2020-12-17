@@ -129,6 +129,7 @@ int main(void)
 		USART1_Init(115200); //´®¿Ú1³õÊ¼»¯
 	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
 		
+		ad7767_init();
 		ret = ad7767_powerup();
 		if(ret==0){
 			printf("ad7767 powerup failed !\n");

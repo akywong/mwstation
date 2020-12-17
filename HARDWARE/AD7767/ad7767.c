@@ -44,7 +44,18 @@ void ad7767_init()
 	GPIO_InitStructure.GPIO_Pin = AD7767_POWERDOWN_PIN;		
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 	
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
-	GPIO_Init(AD7767_POWERDOWN_GPIO_PORT, &GPIO_InitStructure);	
+	GPIO_Init(AD7767_POWERDOWN_GPIO_PORT, &GPIO_InitStructure);
+
+
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);	
+	GPIO_SetBits(GPIOA,GPIO_Pin_8);
+	
+	RCC_MCOConfig(RCC_MCO_PLLCLK_Div2);//RCC_MCO_SYSCLK//RCC_MCO_HSI//RCC_MCO_HSE//RCC_MCO_PLLCLK_Div2
 }
 
 static unsigned char AD7767_SPI_SendByte(unsigned char byte){
