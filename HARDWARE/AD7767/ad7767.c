@@ -30,6 +30,50 @@
 #define AD7767_POWERDOWN_GPIO_CLK   	 RCC_APB2Periph_GPIOD
 
 #define AD7767_DRDY GPIO_ReadInputDataBit(AD7767_DRDY_GPIO_PORT, AD7767_DRDY_PIN)
+
+#define  LEVEL_TOGGLE(x)  x^=1
+
+void TIM2_NVIC_Configuration(void)
+{
+	NVIC_InitTypeDef NVIC_InitStructure;
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
+	NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+}
+
+void TIM2_Configuration(void)
+{
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+		
+	//设置TIM2 CLK为72M
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 , ENABLE);
+	//TIM_DeInit(TIM2);
+
+	//自动装载寄存器周期的值//改成500就是0.5ms中断一次
+	TIM_TimeBaseStructure.TIM_Period=1000; 
+
+	//时钟预分频72-1
+	TIM_TimeBaseStructure.TIM_Prescaler= 71;
+
+	TIM_TimeBaseStructure.TIM_ClockDivision=TIM_CKD_DIV1;
+	TIM_TimeBaseStructure.TIM_CounterMode=TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+	TIM_ClearFlag(TIM2, TIM_FLAG_Update);
+	TIM_ITConfig(TIM2,TIM_IT_Update,ENABLE);
+	TIM_Cmd(TIM2, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 , DISABLE); 
+}
+
+void TIM2_IRQHandler(void)
+{
+	if(TIM_GetITStatus(TIM2,TIM_IT_Update) != RESET){
+		LEVEL_TOGGLE(PBout(12));
+		TIM_ClearITPendingBit(TIM2 , TIM_FLAG_Update);
+	}
+} 
 void ad7767_init()
 {
 	GPIO_InitTypeDef  GPIO_InitStructure; 
@@ -47,15 +91,17 @@ void ad7767_init()
 	GPIO_Init(AD7767_POWERDOWN_GPIO_PORT, &GPIO_InitStructure);
 
 
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);	
-	GPIO_SetBits(GPIOA,GPIO_Pin_8);
+	GPIO_Init(GPIOB, &GPIO_InitStructure);	
+	GPIO_SetBits(GPIOB,GPIO_Pin_12);
 	
-	RCC_MCOConfig(RCC_MCO_PLLCLK_Div2);//RCC_MCO_SYSCLK//RCC_MCO_HSI//RCC_MCO_HSE//RCC_MCO_PLLCLK_Div2
+	TIM2_Configuration(); 
+	TIM2_NVIC_Configuration();
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 , ENABLE);
 }
 
 static unsigned char AD7767_SPI_SendByte(unsigned char byte){
