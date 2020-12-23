@@ -7,8 +7,8 @@
 #include "led.h"
 //#include "w25qxx.h"
 #include "string.h"
-//#include "ff.h"
-//#include "sdio_sdcard.h"
+#include "ff.h"
+#include "sdio_sdcard.h"
 #include "rtc.h"
 #include "timer.h"
 #include "spi.h"
@@ -29,6 +29,9 @@
 #include "sht3x.h"
 #include "ad7767.h"
 #include "main.h"
+
+#define SYNC_COUNT  1000
+#define READ_COUNT   100000
 
 float Rref = 3240.0;
 float FlashGainCorrection;
@@ -71,7 +74,7 @@ struct record_info record_last;
 struct sys_status status;
 struct sys_config config_r,config_t;
 struct wind_info  wind;
-//struct fs_status cur;
+struct fs_status cur;
 //struct bme280_dev dev;
 //struct bme280_data comp_data;
 float pressure;
@@ -100,7 +103,7 @@ void pack_ht_data(void *buf,uint8_t flag);
 void RS485_send_data(void *buf,uint8_t len);
 int main(void)
 {
-	//u8 t=0,r=0;
+	u8 t=0,r=0;
 	volatile static unsigned char tempData[3];
 	unsigned char calibrateCount = 0;
 	
@@ -123,23 +126,79 @@ int main(void)
 	//SPI2_Init();
 	AT24CXX_Init();
 	
+	USART1_Init(115200); //串口1初始化
+	USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+	
+Start:
+			
+			while( SD_OK != SD_Init() ){
+				delay_ms(30);
+				t++;
+				if(t>30){
+					t=0;
+				}
+			}
+			cur.sd_cap = (u32)(SDCardInfo.CardCapacity/1024/1024);
+		
+			delay_ms(500);
+			//开始初始化文件系统
+			while(FR_OK != f_mount(&cur.fs,"0:",1)){
+				delay_ms(30);
+				t++;
+				if(t>30){
+					t=0;
+				}
+			}
+			
+			delay_ms(100);
+			
+			//开始创建文件
+			snprintf(cur.fpath,32,"%04d-%02d-%02d.txt",
+															calendar.w_year,calendar.w_month,calendar.w_date);
+			r=f_open(&cur.fsrc,cur.fpath,FA_OPEN_ALWAYS|FA_WRITE);
+			if(FR_OK != r){
+				printf("\r\n创建文件失败 !\r\n");
+				goto Start;
+			}
+			f_lseek(&cur.fsrc,cur.fsrc.fsize);
+	
 	if(1){
 		int ret;
 		int value;
-		USART1_Init(115200); //串口1初始化
-	  USART_ITConfig(USART1, USART_IT_IDLE, ENABLE);
+		int len;
+		char buf[32];
+		UINT count;
+		int write_count=0;
+		int remain_len = READ_COUNT;
 		
-		ad7767_init();
+		ad7767_init() ;
 		ret = ad7767_powerup();
 		if(ret==0){
 			printf("ad7767 powerup failed !\n");
 		}
 		delay_ms(500);
-		while(1){
-			delay_ms(1000);
+		while(remain_len--){
+			//delay_ms(1000);
 			ret = ad7767_read_data(&value);
-			printf("read ad7767 return %d, read data:%d\n",ret,value);
+			//printf("read ad7767 return %d, read data:%d\n",ret,value);
+			
+			//write data to sd
+			len = sprintf("%d,%d\n",buf,value,ret);
+			ret = f_write(&cur.fsrc,buf,len+2,&count);
+			if(FR_OK != ret){
+				f_close(&cur.fsrc);//FR_OK
+				printf("write file failed \n");
+			}else{
+				write_count++;
+				if(write_count==SYNC_COUNT){
+					f_sync(&cur.fsrc);
+					write_count=0;
+				}
+			}
 		}
+		f_close(&cur.fsrc);
+		printf("read finished \n");
+		return 0;
 	}
 	if(0){
 		Thunder_Init();

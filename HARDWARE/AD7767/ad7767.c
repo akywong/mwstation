@@ -53,7 +53,7 @@ void TIM2_Configuration(void)
 	//TIM_DeInit(TIM2);
 
 	//自动装载寄存器周期的值//改成500就是0.5ms中断一次
-	TIM_TimeBaseStructure.TIM_Period=1000; 
+	TIM_TimeBaseStructure.TIM_Period=250; 
 
 	//时钟预分频72-1
 	TIM_TimeBaseStructure.TIM_Prescaler= 71;
@@ -102,6 +102,16 @@ void ad7767_init()
 	TIM2_Configuration(); 
 	TIM2_NVIC_Configuration();
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 , ENABLE);
+	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);	
+	GPIO_SetBits(GPIOA,GPIO_Pin_8);
+
+	RCC_MCOConfig(RCC_MCO_PLLCLK_Div2);//RCC_MCO_SYSCLK//RCC_MCO_HSI//RCC_MCO_HSE//RCC_MCO_PLLCLK_Div2
 }
 
 static unsigned char AD7767_SPI_SendByte(unsigned char byte){
@@ -125,14 +135,14 @@ int ad7767_read_data(int *buf)
 			timeout--;
 	}
 	
-	ad7767_spi_init();
+	//ad7767_spi_init();
 	// assert CS to start transfer 
 	//AD7767_ENABLE();  
-	AD7767_DELAY(1);
+	//AD7767_DELAY(1);
 	for (i=0; i< 3; i++){
 		rbuf[i] = AD7767_SPI_SendByte(wbuf[i]);
 	} 
-	AD7767_DELAY(1);
+	//AD7767_DELAY(1);
 	//AD7767_DISABLE(); 
 	
 	data = rbuf[0];
