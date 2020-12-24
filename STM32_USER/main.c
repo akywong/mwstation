@@ -178,13 +178,11 @@ Start:
 		}
 		delay_ms(500);
 		while(remain_len--){
-			//delay_ms(1000);
 			ret = ad7767_read_data(&value);
-			//printf("read ad7767 return %d, read data:%d\n",ret,value);
-			
+
 			//write data to sd
-			len = sprintf("%d,%d\n",buf,value,ret);
-			ret = f_write(&cur.fsrc,buf,len+2,&count);
+			len = sprintf(buf,"%d,%d\n",value,ret);
+			ret = f_write(&cur.fsrc,buf,len,&count);
 			if(FR_OK != ret){
 				f_close(&cur.fsrc);//FR_OK
 				printf("write file failed \n");

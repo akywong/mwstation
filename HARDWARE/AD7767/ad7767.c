@@ -56,7 +56,7 @@ void TIM2_Configuration(void)
 	TIM_TimeBaseStructure.TIM_Period=250; 
 
 	// ±÷”‘§∑÷∆µ72-1
-	TIM_TimeBaseStructure.TIM_Prescaler= 71;
+	TIM_TimeBaseStructure.TIM_Prescaler= 0;
 
 	TIM_TimeBaseStructure.TIM_ClockDivision=TIM_CKD_DIV1;
 	TIM_TimeBaseStructure.TIM_CounterMode=TIM_CounterMode_Up;
@@ -150,7 +150,9 @@ int ad7767_read_data(int *buf)
 	data |= rbuf[1];
 	data <<= 8;
   data |= rbuf[2];
-  data &= 0x00FFFFFF;
+	if(data&0x800000){
+		data |= 0xFF000000;
+	}
 	*buf = data;
 	//return(data);
 	if(timeout)
