@@ -121,14 +121,14 @@ static unsigned char AD7767_SPI_SendByte(unsigned char byte){
 	return SPI1_ReadWriteByte(byte);
 #endif
 }
-int ad7767_read_data(int *buf)
+int ad7767_read_data(void *buf)
 {
 	int i;
 	int timeout=1000;
 	char check=1;
-	unsigned int data = 0x00000000;
-	unsigned int wbuf[3] = {0xAA,0xAA,0xAA};
-	unsigned int rbuf[3] = {0x00,0x00,0x00};
+	unsigned char wbuf[3] = {0xAA,0xAA,0xAA};
+	unsigned char rbuf[3] = {0x00,0x00,0x00};
+	unsigned char *data = (unsigned char *)buf;
 	
 	while(timeout&&check){
 			check = AD7767_DRDY;
@@ -145,15 +145,10 @@ int ad7767_read_data(int *buf)
 	//AD7767_DELAY(1);
 	//AD7767_DISABLE(); 
 	
-	data = rbuf[0];
-	data <<= 8;
-	data |= rbuf[1];
-	data <<= 8;
-  data |= rbuf[2];
-	if(data&0x800000){
-		data |= 0xFF000000;
-	}
-	*buf = data;
+	data[3]=(rbuf[0]&0x80)? 0xff:0;
+	data[2]=rbuf[0];
+	data[1]=rbuf[1];
+	data[0]=rbuf[2];
 	//return(data);
 	if(timeout)
 		return 1;
